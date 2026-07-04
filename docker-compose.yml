@@ -10,6 +10,7 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./sql/initdb:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U voting -d voting"]
       interval: 3s
@@ -26,6 +27,21 @@ services:
       - ./app/flyway/sql:/flyway/sql:ro
     command:
       - -url=jdbc:postgresql://postgres:5432/voting
+      - -user=voting
+      - -password=voting
+      - -connectRetries=10
+      - migrate
+
+  flyway-test:
+    image: flyway/flyway:10-alpine
+    container_name: voting-flyway-test
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./app/flyway/sql:/flyway/sql:ro
+    command:
+      - -url=jdbc:postgresql://postgres:5432/voting_test
       - -user=voting
       - -password=voting
       - -connectRetries=10

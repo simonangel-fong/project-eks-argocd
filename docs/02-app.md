@@ -7,6 +7,9 @@
   - [Development](#development)
     - [Init](#init)
     - [Flyway](#flyway)
+    - [Poll](#poll)
+    - [Vote](#vote)
+  - [PyTest](#pytest)
 
 ---
 
@@ -80,6 +83,7 @@ curl http://127.0.0.1:8000/readyz
 docker compose stop postgres
 curl -i http://127.0.0.1:8000/readyz
 ```
+
 ---
 
 ### Flyway
@@ -95,4 +99,83 @@ docker compose logs flyway
 # voting-flyway  | Current version of schema "public": << Empty Schema >>
 # voting-flyway  | Migrating schema "public" to version "1 - initial schema"
 # voting-flyway  | Successfully applied 1 migration to schema "public", now at version v1 (execution time 00:00.081s)
+```
+
+---
+
+### Poll
+
+```sh
+# happy path
+curl -s -X POST http://127.0.0.1:8000/polls -H "content-type: application/json" -d "{\"title\":\"cats or dogs\",\"options\":[\"cats\",\"dogs\"]}"
+# {"id":1,"title":"cats or dogs","created_at":"2026-07-04T21:27:00.402045Z","closes_at":null,"options":[{"id":1,"label":"cats"},{"id":2,"label":"dogs"}]}
+curl -s http://127.0.0.1:8000/polls
+# [{"id":1,"title":"cats or dogs","created_at":"2026-07-04T21:27:00.402045Z","closes_at":null}]
+curl -s http://127.0.0.1:8000/polls/1
+# {"id":1,"title":"cats or dogs","created_at":"2026-07-04T21:27:00.402045Z","closes_at":null,"options":[{"id":1,"label":"cats"},{"id":2,"label":"dogs"}]}
+
+# alternative path
+curl -s -X POST http://127.0.0.1:8000/polls -H "content-type: application/json" -d "{\"title\":\"\",\"options\":[\"a\",\"b\"]}"
+# {"detail":[{"type":"value_error","loc":["body","title"],"msg":"Value error, title must not be empty","input":"","ctx":{"error":{}}}]}
+
+curl -s -X POST http://127.0.0.1:8000/polls -H "content-type: application/json" -d "{\"title\":\"x\",\"options\":[\"a\",\"a\"]}"
+# {"detail":[{"type":"value_error","loc":["body","options"],"msg":"Value error, duplicate option labels","input":["a","a"],"ctx":{"error":{}}}]}
+
+```
+
+---
+
+### Vote
+
+```sh
+# happy path
+curl -s -X POST http://127.0.0.1:8000/polls/1/vote -H "content-type: application/json" -H "X-User-Id: alice" -d "{\"option_id\":1}"
+# {"poll_id":1,"option_id":1,"voter_id":"alice","created_at":"2026-07-04T21:30:58.142756Z"}
+
+curl -s -X POST http://127.0.0.1:8000/polls/1/vote -H "content-type: application/json" -H "X-User-Id: bob"   -d "{\"option_id\":2}"
+# {"poll_id":1,"option_id":2,"voter_id":"bob","created_at":"2026-07-04T21:31:18.943122Z"}
+
+curl -s http://127.0.0.1:8000/polls/1/results
+# {"poll_id":1,"total_votes":2,"tallies":[{"option_id":1,"label":"cats","votes":1},{"option_id":2,"label":"dogs","votes":1}]}
+
+# alternative path
+curl -i -X POST http://127.0.0.1:8000/polls/1/vote -H "content-type: application/json" -d "{\"option_id\":1}"
+# HTTP/1.1 400 Bad Request
+# date: Sat, 04 Jul 2026 21:32:14 GMT
+# server: uvicorn
+# content-length: 38
+# content-type: application/json
+
+# {"detail":"X-User-Id header required"}
+
+curl -i -X POST http://127.0.0.1:8000/polls/1/vote -H "content-type: application/json" -H "X-User-Id: alice" -d "{\"option_id\":1}"
+# HTTP/1.1 409 Conflict
+# date: Sat, 04 Jul 2026 21:32:56 GMT
+# server: uvicorn
+# content-length: 27
+# content-type: application/json
+
+# {"detail":"duplicate vote"}
+
+curl -i -X POST http://127.0.0.1:8000/polls/999/vote -H "content-type: application/json" -H "X-User-Id: x"  -d "{\"option_id\":1}"
+# HTTP/1.1 404 Not Found
+# date: Sat, 04 Jul 2026 21:33:15 GMT
+# server: uvicorn
+# content-length: 27
+# content-type: application/json
+
+# {"detail":"poll not found"}
+```
+
+---
+
+## PyTest
+
+```sh
+docker compose down -v
+docker compose up -d
+
+cd app
+uv sync
+uv run pytest -v
 ```

@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 
 from voting.db import ping
+from voting.routers import polls
 
 log = logging.getLogger("uvicorn.error")
 
@@ -16,6 +17,7 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(title="Voting API", lifespan=lifespan)
+app.include_router(polls.router)
 
 
 @app.get("/")
