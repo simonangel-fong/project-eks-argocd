@@ -121,15 +121,15 @@ Phase 3 swaps `DATABASE_URL` to the compose service name; phase 4 injects it via
 
 All JSON. `X-User-Id` required only on `POST /vote` (missing/blank → `400`).
 
-| Method | Path                     | Body                              | Response (success)                                                              | Errors                                                                          |
-| ------ | ------------------------ | --------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| POST   | `/polls`                 | `{title, options[], closes_at?}`  | `201 {id, title, options:[{id,label}], created_at, closes_at}`                  | `422` empty title or <2 options                                                 |
-| GET    | `/polls`                 | —                                 | `200 [{id, title, created_at, closes_at}, ...]`                                 | —                                                                               |
-| GET    | `/polls/{id}`            | —                                 | `200 {id, title, options:[{id,label}], created_at, closes_at}`                  | `404`                                                                           |
-| POST   | `/polls/{id}/vote`       | `{option_id}`                     | `201 {poll_id, option_id, voter_id, created_at}`                                | `400` no `X-User-Id`; `403` closed; `404` poll/option not found; `409` duplicate |
-| GET    | `/polls/{id}/results`    | —                                 | `200 {poll_id, total_votes, tallies:[{option_id, label, votes}, ...]}`          | `404`                                                                           |
-| GET    | `/healthz`               | —                                 | `200 {"status":"ok"}`                                                           | —                                                                               |
-| GET    | `/readyz`                | —                                 | `200 {"status":"ready"}` if `SELECT 1` works                                    | `503` DB unreachable                                                            |
+| Method | Path                  | Body                             | Response (success)                                                     | Errors                                                                           |
+| ------ | --------------------- | -------------------------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| POST   | `/polls`              | `{title, options[], closes_at?}` | `201 {id, title, options:[{id,label}], created_at, closes_at}`         | `422` empty title or <2 options                                                  |
+| GET    | `/polls`              | —                                | `200 [{id, title, created_at, closes_at}, ...]`                        | —                                                                                |
+| GET    | `/polls/{id}`         | —                                | `200 {id, title, options:[{id,label}], created_at, closes_at}`         | `404`                                                                            |
+| POST   | `/polls/{id}/vote`    | `{option_id}`                    | `201 {poll_id, option_id, voter_id, created_at}`                       | `400` no `X-User-Id`; `403` closed; `404` poll/option not found; `409` duplicate |
+| GET    | `/polls/{id}/results` | —                                | `200 {poll_id, total_votes, tallies:[{option_id, label, votes}, ...]}` | `404`                                                                            |
+| GET    | `/healthz`            | —                                | `200 {"status":"ok"}`                                                  | —                                                                                |
+| GET    | `/readyz`             | —                                | `200 {"status":"ready"}` if `SELECT 1` works                           | `503` DB unreachable                                                             |
 
 ### vote semantics
 
@@ -197,7 +197,6 @@ curl -s localhost:8000/polls/1/results
 
 Auth (Cognito is phase 8-ish), rate limiting, CORS beyond `*`, Dockerfile (phase 3), metrics/tracing (phase 8), pagination on `GET /polls`.
 
-
 ---
 
 ## Development
@@ -231,4 +230,33 @@ curl http://localhost:8000/healthz
 
 curl http://localhost:8000/
 # {"detail":"Not Found"}
+```
+
+---
+
+### DB Connection
+
+```sh
+# install the new deps
+pip install -e app/
+
+# spin up database
+docker compose up -d
+
+# start the server
+uvicorn voting.main:app --port 8000
+
+# test conn 
+python -c "from voting.db import engine; from sqlalchemy import text; print(engine.connect().execute(text('SELECT 1')).scalar())"
+# 1
+
+curl http://localhost:8000/readyz
+# {"status":"ready"}
+
+# ##########
+# alternative
+# ##########
+docker compose stop postgres
+curl http://localhost:8000/readyz
+# {"detail":"db unreachable"}
 ```
