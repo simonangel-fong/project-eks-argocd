@@ -8,6 +8,7 @@
     - [`values-prod.yaml` — prod-shaped](#values-prodyaml--prod-shaped)
   - [delivery phase](#delivery-phase)
   - [Development](#development)
+    - [Gateway](#gateway)
 
 ---
 
@@ -311,7 +312,7 @@ kubectl get pod voting-voting-app-postgres-0
 # NAME                           READY   STATUS    RESTARTS   AGE
 # voting-voting-app-postgres-0   1/1     Running   0          27s
 
-kubectl get pvc data-voting-voting-app-postgres-0 
+kubectl get pvc data-voting-voting-app-postgres-0
 # NAME                                STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
 # data-voting-voting-app-postgres-0   Bound    pvc-d30ffbaa-2877-4322-b100-72a953602cb6   2Gi        RWO            standard       <unset>                 40s
 
@@ -354,22 +355,43 @@ kubectl exec -i voting-voting-app-postgres-0 -- psql -U voting -d voting -c "SEL
 # (1 row)
 
 
-
 helm upgrade -i voting ./helm/voting-app -f ./helm/voting-app/values-dev.yaml
 kubectl rollout status deploy/voting-voting-app-api --timeout=120s
 # deployment "voting-voting-app-api" successfully rolled out
 kubectl port-forward svc/voting-voting-app-api 8000:8000
 curl -s http://127.0.0.1:8000/readyz
 # {"status":"ready"}
+```
 
+### Gateway
 
-kubectl port-forward svc/voting-voting-app-api 8000:8000 & curl -s http://127.0.0.1:8000/readyz
+```sh
+kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.2.0/standard-install.yaml
+
+helm install ngf oci://ghcr.io/nginx/charts/nginx-gateway-fabric   --create-namespace -n nginx-gateway
+
+k get gatewayclass
+# NAME    CONTROLLER                                   ACCEPTED   AGE
+# nginx   gateway.nginx.org/nginx-gateway-controller   True       11s
+
+helm upgrade -i voting ./helm/voting-app -f ./helm/voting-app/values-dev.yaml
+
+kubectl get gateway voting-voting-app-api
+# NAME                    CLASS   ADDRESS   PROGRAMMED   AGE
+# voting-voting-app-api   nginx             True         6s
+
+kubectl get httproute voting-voting-app-api -o wide
+# NAME                    HOSTNAMES          AGE
+# voting-voting-app-api   ["voting.local"]   22s
+
+kubectl get svc -n nginx-gateway
+# NAME                       TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
+# ngf-nginx-gateway-fabric   ClusterIP   10.96.152.137   <none>        443/TCP   93s
 
 # clean up
 helm uninstall voting
 kubectl delete pvc data-voting-voting-app-postgres-0
 ```
-
 
 runbook
 
@@ -377,4 +399,23 @@ runbook
 # debug flyway
 kubectl logs voting-voting-app-api-765b494888-tsr9x -c flyway
 
+```
+
+---
+
+test
+
+```sh
+helm upgrade -i voting ./helm/voting-app -f ./helm/voting-app/values-dev.yaml
+helm test voting
+# NAME: voting
+# LAST DEPLOYED: Sat Jul  4 22:54:47 2026
+# NAMESPACE: default
+# STATUS: deployed
+# REVISION: 7
+# DESCRIPTION: Upgrade complete
+# TEST SUITE:     voting-voting-app-api-test
+# Last Started:   Sat Jul  4 22:55:08 2026
+# Last Completed: Sat Jul  4 22:55:14 2026
+# Phase:          Succeeded
 ```
