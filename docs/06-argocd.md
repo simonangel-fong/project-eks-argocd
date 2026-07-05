@@ -38,7 +38,6 @@ argocd/
 
 ---
 
-
 ## Development
 
 ```sh
@@ -50,4 +49,10 @@ kubectl apply -f argocd/00-root.yaml
 
 kubectl -n argocd patch app/00-root -p '{"metadata":{"finalizers":[]}}' --type merge
 kubectl -n argocd patch app/eso -p '{"metadata":{"finalizers":[]}}' --type merge
+```
+
+- ESO
+
+```sh
+kubectl -n external-secrets get sa
 ```
