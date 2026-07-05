@@ -3,6 +3,11 @@
 #   value       = module.vpc.vpc_id
 # }
 
+output "placeholder_tg_arn" {
+  description = "Placeholder target group ARN — paste into TargetGroupBinding manifest (7.5)."
+  value       = aws_lb_target_group.placeholder.arn
+}
+
 # output "private_subnet_ids" {
 #   description = "Private subnet IDs (workloads + private ALB)."
 #   value       = module.vpc.private_subnets

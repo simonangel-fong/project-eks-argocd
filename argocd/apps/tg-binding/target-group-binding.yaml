@@ -1,0 +1,11 @@
+apiVersion: elbv2.k8s.aws/v1beta1
+kind: TargetGroupBinding
+metadata:
+  name: voting-api
+  namespace: voting
+spec:
+  targetGroupARN: arn:aws:elasticloadbalancing:ca-central-1:099139718958:targetgroup/voting-dev-placeholder/9fc53cd735776cb3
+  targetType: ip
+  serviceRef:
+    name: voting-app-api
+    port: 8000
