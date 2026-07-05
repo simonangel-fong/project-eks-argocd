@@ -37,3 +37,12 @@ argocd/
 | 7.13 | configure e-dns     | confirure e-dns and enable dns via cloudflare;                                     |
 
 ---
+
+
+## Development
+
+```sh
+kubectl apply -f argocd/00-root.yaml
+
+kubectl -n argocd patch app/00-root -p '{"metadata":{"finalizers":[]}}' --type merge
+```
