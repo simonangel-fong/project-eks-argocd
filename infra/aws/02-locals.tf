@@ -24,6 +24,24 @@ locals {
   eks_node_type         = "t3.large"
   eks_node_desired_size = 3
 
+  # ##############################
+  # ArgoCD
+  # ##############################
+  argocd_namespace = "argocd"
+  argocd_repo      = "https://argoproj.github.io/argo-helm"
+  argocd_chart     = "argo-cd"
+  argocd_chart_ver = "3.35.4"
+  argocd_release   = "argocd"
+
+  argocd_values = yamlencode({
+    server = {
+      service = {
+        type = "ClusterIP"
+      }
+    }
+  })
+
+
 }
 
 

@@ -4,15 +4,16 @@ metadata:
   name: 00-root
   namespace: argocd
   finalizers:
-    - resources-finalizer.argocd.argoproj.io/background
+    - argocd.argoproj.io/resources-finalizer
 spec:
   project: default
   source:
     repoURL: https://github.com/simonangel-fong/project-eks-argocd
     targetRevision: master
-    path: argocd/apps
+    path: argocd
     directory:
-      recurse: false
+      recurse: true
+      exclude: '01-root.yaml'
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
@@ -22,3 +23,4 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - ApplyOutOfSyncOnly=true
