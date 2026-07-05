@@ -2,22 +2,22 @@ data "aws_caller_identity" "current" {}
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 20.0"
+  version = "~> 21.0"
 
-  cluster_name    = local.eks_name
-  cluster_version = local.eks_version
+  name               = local.eks_name
+  kubernetes_version = local.eks_version
 
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
 
-  cluster_endpoint_private_access      = true
-  cluster_endpoint_public_access       = true
-  cluster_endpoint_public_access_cidrs = var.cluster_public_access_cidrs
+  endpoint_private_access      = true
+  endpoint_public_access       = true
+  endpoint_public_access_cidrs = var.cluster_public_access_cidrs
 
   authentication_mode                      = "API"
   enable_cluster_creator_admin_permissions = true
 
-  cluster_addons = {
+  addons = {
     vpc-cni    = {}
     coredns    = {}
     kube-proxy = {}

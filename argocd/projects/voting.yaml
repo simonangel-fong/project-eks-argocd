@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: voting
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: Voting workload
+  sourceRepos:
+    - https://github.com/simonangel-fong/project-eks-argocd
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: voting
+  clusterResourceWhitelist:
+    - group: gateway.networking.k8s.io
+      kind: '*'
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*'

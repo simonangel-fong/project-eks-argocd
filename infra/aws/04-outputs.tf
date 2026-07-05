@@ -33,12 +33,12 @@ output "kubeconfig_command" {
   value       = "aws eks update-kubeconfig --region ${var.region} --name ${module.eks.cluster_name}"
 }
 
-# output "alb_dns_name" {
-#   description = "Private ALB DNS name (in-VPC access only)."
-#   value       = aws_lb.private.dns_name
-# }
+output "argocd_server_url" {
+  description = "ArgoCD server URL (managed via EKS capability)."
+  value       = module.argocd_eks_capability.argocd_server_url
+}
 
-# output "api_gateway_invoke_url" {
-#   description = "API Gateway HTTP API invoke URL."
-#   value       = aws_apigatewayv2_api.this.api_endpoint
-# }
+output "argocd_iam_role_arn" {
+  description = "IAM role assumed by the ArgoCD EKS capability."
+  value       = module.argocd_eks_capability.iam_role_arn
+}

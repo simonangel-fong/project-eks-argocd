@@ -4,7 +4,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.0"
+      version = "~> 6.0"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
@@ -14,12 +14,19 @@ terraform {
   backend "s3" {}
 }
 
+# aws common configuration
 provider "aws" {
   region = var.region
 
   default_tags {
     tags = local.default_tags
   }
+}
+
+# aws identity center
+provider "aws" {
+  alias  = "identity"
+  region = "us-east-1" # Identity Center home region
 }
 
 provider "kubernetes" {
