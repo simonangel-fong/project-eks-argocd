@@ -68,3 +68,8 @@ flyway:
 
 api:
   env: []
+
+metrics:
+  enabled: true
+  path: /metrics
+  interval: 30s
