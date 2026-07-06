@@ -1,54 +1,54 @@
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: kube-prometheus-stack
-  namespace: argocd
-  finalizers:
-    - argocd.argoproj.io/resources-finalizer
-spec:
-  project: default
-  source:
-    repoURL: https://prometheus-community.github.io/helm-charts
-    chart: kube-prometheus-stack
-    targetRevision: 87.10.1
-    helm:
-      releaseName: kps
-      values: |
-        crds:
-          enabled: false                 # installed by prometheus-operator-crds app
-        prometheus:
-          prometheusSpec:
-            retention: 7d
-            serviceMonitorSelectorNilUsesHelmValues: false
-            podMonitorSelectorNilUsesHelmValues: false
-            probeSelectorNilUsesHelmValues: false
-            ruleSelectorNilUsesHelmValues: false
-            scrapeConfigSelectorNilUsesHelmValues: false
-            storageSpec:
-              volumeClaimTemplate:
-                spec:
-                  storageClassName: gp3
-                  accessModes: ["ReadWriteOnce"]
-                  resources:
-                    requests:
-                      storage: 20Gi
-        grafana:
-          adminPassword: admin           # dev only — swap to ESO later
-          persistence:
-            enabled: true
-            storageClassName: gp3
-            size: 5Gi
-          defaultDashboardsEnabled: true # bundled kube dashboards
-        alertmanager:
-          enabled: false                 # skip for dev
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: monitoring
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
-      - ServerSideApply=true
-      - SkipDryRunOnMissingResource=true
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: kube-prometheus-stack
+#   namespace: argocd
+#   finalizers:
+#     - argocd.argoproj.io/resources-finalizer
+# spec:
+#   project: default
+#   source:
+#     repoURL: https://prometheus-community.github.io/helm-charts
+#     chart: kube-prometheus-stack
+#     targetRevision: 87.10.1
+#     helm:
+#       releaseName: kps
+#       values: |
+#         crds:
+#           enabled: false                 # installed by prometheus-operator-crds app
+#         prometheus:
+#           prometheusSpec:
+#             retention: 7d
+#             serviceMonitorSelectorNilUsesHelmValues: false
+#             podMonitorSelectorNilUsesHelmValues: false
+#             probeSelectorNilUsesHelmValues: false
+#             ruleSelectorNilUsesHelmValues: false
+#             scrapeConfigSelectorNilUsesHelmValues: false
+#             storageSpec:
+#               volumeClaimTemplate:
+#                 spec:
+#                   storageClassName: gp3
+#                   accessModes: ["ReadWriteOnce"]
+#                   resources:
+#                     requests:
+#                       storage: 20Gi
+#         grafana:
+#           adminPassword: admin           # dev only — swap to ESO later
+#           persistence:
+#             enabled: true
+#             storageClassName: gp3
+#             size: 5Gi
+#           defaultDashboardsEnabled: true # bundled kube dashboards
+#         alertmanager:
+#           enabled: false                 # skip for dev
+#   destination:
+#     server: https://kubernetes.default.svc
+#     namespace: monitoring
+#   syncPolicy:
+#     automated:
+#       prune: true
+#       selfHeal: true
+#     syncOptions:
+#       - CreateNamespace=true
+#       - ServerSideApply=true
+#       - SkipDryRunOnMissingResource=true
