@@ -14,6 +14,8 @@ spec:
     helm:
       releaseName: prometheus            # match the helm install to adopt existing resources
       values: |
+        crds:
+          enabled: false                 # keep helm's initial CRDs; upgrade separately
         prometheus:
           prometheusSpec:
             retention: 7d
