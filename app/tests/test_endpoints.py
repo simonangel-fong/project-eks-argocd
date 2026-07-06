@@ -10,6 +10,14 @@ def _create_poll(client, title="cats or dogs", options=("cats", "dogs"), closes_
     return r.json()
 
 
+def test_root(client):
+    r = client.get("/")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["app"] == "voting api"
+    assert body["version"]
+
+
 def test_healthz(client):
     r = client.get("/healthz")
     assert r.status_code == 200
@@ -148,6 +156,34 @@ def test_results(client):
 def test_results_404(client):
     r = client.get("/polls/999999/results")
     assert r.status_code == 404
+
+
+def test_results_default_limit_and_ordering(client):
+    poll = _create_poll(client, title="7 opts", options=[f"opt{i}" for i in range(7)])
+    opt_ids = [o["id"] for o in poll["options"]]
+    # give opt0..opt6 vote counts of 7,6,5,4,3,2,1
+    voter = 0
+    for opt_id, count in zip(opt_ids, [7, 6, 5, 4, 3, 2, 1]):
+        for _ in range(count):
+            voter += 1
+            client.post(
+                f"/polls/{poll['id']}/vote",
+                json={"option_id": opt_id},
+                headers={"X-User-Id": f"u{voter}"},
+            )
+
+    r = client.get(f"/polls/{poll['id']}/results")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["total_votes"] == 28
+    votes = [t["votes"] for t in body["tallies"]]
+    assert votes == [7, 6, 5, 4, 3]  # default limit=5, desc
+
+    r_all = client.get(f"/polls/{poll['id']}/results?limit=0")
+    assert [t["votes"] for t in r_all.json()["tallies"]] == [7, 6, 5, 4, 3, 2, 1]
+
+    r_two = client.get(f"/polls/{poll['id']}/results?limit=2")
+    assert [t["votes"] for t in r_two.json()["tallies"]] == [7, 6]
 
 
 def test_two_voters_one_each_and_duplicate_rejected(client):

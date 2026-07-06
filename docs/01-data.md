@@ -102,6 +102,33 @@ erDiagram
 
 ---
 
+## Sample data
+
+Seeded by Flyway migration `V2__seed_sample_polls.sql` — runs after `V1` on every fresh database, so any environment (docker compose, CI, EKS via Helm) comes up pre-populated.
+
+**Polls**
+
+| id  | title                            |
+| --- | -------------------------------- |
+| 1   | Favorite programming language?   |
+| 2   | Best cloud provider?             |
+
+**Options & votes**
+
+| poll | option     | votes |
+| ---- | ---------- | ----- |
+| 1    | Python     | 3     |
+| 1    | Go         | 3     |
+| 1    | TypeScript | 2     |
+| 1    | Rust       | 2     |
+| 2    | AWS        | 4     |
+| 2    | Azure      | 3     |
+| 2    | GCP        | 3     |
+
+Voters use synthetic ids `voter-01` … `voter-20` — each id votes in at most one poll to satisfy `uq_votes_poll_voter`. The migration ends with `setval(...)` on the `polls` and `options` sequences so app-created rows start at id 3 / id 8 and won't collide with the seed.
+
+---
+
 ## Development
 
 ```sh
@@ -112,20 +139,24 @@ docker compose up -d
 docker exec -it voting-postgres psql -U voting -d voting
 
 ## verify
-
-# tally: expect AWS=2, GCP=1, Azure=1
-docker exec -i voting-postgres psql -U voting -d voting < sql/03_tally.sql
-#  poll_id |        poll_title        | option_id | option_label | vote_count 
-# ---------+--------------------------+-----------+--------------+------------
-#        1 | Favourite cloud provider |         1 | AWS          |          2
-#        1 | Favourite cloud provider |         2 | GCP          |          1
-#        1 | Favourite cloud provider |         3 | Azure        |          1
-# (3 rows)
-
-# duplicate vote
-docker exec -i voting-postgres psql -U voting -d voting < sql/04_test_duplicate.sql
-# ERROR:  duplicate key value violates unique constraint "uq_votes_poll_voter"
-# DETAIL:  Key (poll_id, voter_id)=(1, user-a) already exists.
+# show seeded sample data (2 polls, 20 votes)
+docker exec -i voting-postgres psql -U voting -d voting -c "
+  SELECT p.title, o.label, COUNT(v.id) AS votes
+  FROM polls p
+  JOIN options o ON o.poll_id = p.id
+  LEFT JOIN votes v ON v.option_id = o.id
+  GROUP BY p.id, p.title, o.id, o.label
+  ORDER BY p.id, o.id;"
+#              title              |   label    | votes
+# --------------------------------+------------+-------
+#  Favorite programming language? | Python     |     3
+#  Favorite programming language? | Go         |     3
+#  Favorite programming language? | TypeScript |     2
+#  Favorite programming language? | Rust       |     2
+#  Best cloud provider?           | AWS        |     4
+#  Best cloud provider?           | Azure      |     3
+#  Best cloud provider?           | GCP        |     3
+# (7 rows)
 
 docker compose down -v
 docker compose up -d

@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, Header, HTTPException, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
@@ -88,7 +88,11 @@ def cast_vote(
 
 
 @router.get("/{poll_id}/results", response_model=PollResults)
-def get_results(poll_id: int, db: Session = Depends(get_db)):
+def get_results(
+    poll_id: int,
+    limit: int = Query(default=5, ge=0, description="Max tallies to return; 0 = all"),
+    db: Session = Depends(get_db),
+):
     poll = (
         db.query(Poll)
         .options(selectinload(Poll.options))
@@ -108,8 +112,12 @@ def get_results(poll_id: int, db: Session = Depends(get_db)):
         Tally(option_id=o.id, label=o.label, votes=counts.get(o.id, 0))
         for o in poll.options
     ]
+    total_votes = sum(t.votes for t in tallies)
+    tallies.sort(key=lambda t: (-t.votes, t.option_id))
+    if limit > 0:
+        tallies = tallies[:limit]
     return PollResults(
         poll_id=poll.id,
-        total_votes=sum(t.votes for t in tallies),
+        total_votes=total_votes,
         tallies=tallies,
     )

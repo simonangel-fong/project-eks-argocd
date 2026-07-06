@@ -1,5 +1,6 @@
 import logging
 from contextlib import asynccontextmanager
+from importlib.metadata import version
 
 from fastapi import FastAPI, HTTPException
 from prometheus_fastapi_instrumentator import Instrumentator
@@ -8,6 +9,8 @@ from voting.db import ping
 from voting.routers import polls
 
 log = logging.getLogger("uvicorn.error")
+APP_NAME = "voting api"
+APP_VERSION = version("voting")
 
 
 @asynccontextmanager
@@ -24,7 +27,7 @@ Instrumentator().instrument(app).expose(app, endpoint="/metrics", include_in_sch
 
 @app.get("/")
 def root():
-    return {"message": "hello world"}
+    return {"app": APP_NAME, "version": APP_VERSION}
 
 
 @app.get("/healthz")
