@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: voting-app
+  namespace: argocd
+  finalizers:
+    - argocd.argoproj.io/resources-finalizer
+spec:
+  project: voting
+  source:
+    repoURL: https://github.com/simonangel-fong/project-eks-argocd
+    targetRevision: master
+    path: helm/voting-app
+    helm:
+      releaseName: voting-app
+      valueFiles:
+        - values.yaml
+        - values-dev.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: voting
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

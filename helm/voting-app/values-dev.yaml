@@ -2,7 +2,7 @@ image:
   pullPolicy: Always
 
 gateway:
-  enabled: true
+  enabled: false
   createGateway: true
   className: nginx
   host: voting.local
