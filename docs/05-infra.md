@@ -99,6 +99,8 @@ terraform -chdir=infra/aws fmt && terraform -chdir=infra/aws validate
 terraform -chdir=infra/aws plan
 
 terraform -chdir=infra/aws apply -auto-approve
+
+terraform -chdir=infra/aws destroy -auto-approve
 ```
 
 - Connect cluster
@@ -112,5 +114,4 @@ k get node
 # ip-10-0-12-95.ca-central-1.compute.internal    Ready    <none>   2m48s   v1.36.2-eks-7d6f6ec
 # ip-10-0-15-157.ca-central-1.compute.internal   Ready    <none>   2m48s   v1.36.2-eks-7d6f6ec
 # ip-10-0-16-76.ca-central-1.compute.internal    Ready    <none>   2m47s   v1.36.2-eks-7d6f6ec
-
 ```

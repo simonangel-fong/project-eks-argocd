@@ -17,7 +17,7 @@ variable "region" {
 }
 
 variable "cluster_public_access_cidrs" {
-  description = "CIDRs allowed to reach the EKS public API endpoint."
+  description = "CIDRs allowed to reach the EKS public API endpoint.(curl -4 ifconfig.me)"
   type        = list(string)
   default     = ["0.0.0.0/0"]
 }

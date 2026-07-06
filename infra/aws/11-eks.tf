@@ -18,7 +18,21 @@ module "eks" {
   enable_cluster_creator_admin_permissions = true
 
   addons = {
-    vpc-cni    = {}
+    vpc-cni = {
+      most_recent    = true
+      before_compute = true
+      configuration_values = jsonencode({
+        enableNetworkPolicy = "true"
+        init = {
+          env = {
+            DISABLE_TCP_EARLY_DEMUX = "true"
+          }
+        }
+      })
+    }
+    kube-proxy = {
+      before_compute = true
+    }
     coredns    = {}
     kube-proxy = {}
     aws-ebs-csi-driver = { pod_identity_association = [{
@@ -30,7 +44,7 @@ module "eks" {
   }
 
   eks_managed_node_groups = {
-    default = {
+    bootstrap = {
       ami_type       = "AL2023_x86_64_STANDARD"
       instance_types = [local.eks_node_type]
       capacity_type  = "ON_DEMAND"

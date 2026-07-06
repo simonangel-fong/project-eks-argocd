@@ -22,7 +22,7 @@ locals {
   eks_name              = local.common_name
   eks_version           = "1.36"
   eks_node_type         = "t3.large"
-  eks_node_desired_size = 3
+  eks_node_desired_size = 2
 
   # ##############################
   # ArgoCD

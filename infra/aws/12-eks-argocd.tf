@@ -86,4 +86,6 @@ resource "helm_release" "argocd" {
   wait          = false
   wait_for_jobs = false
   timeout       = 600
+
+  depends_on = [module.eks]
 }
