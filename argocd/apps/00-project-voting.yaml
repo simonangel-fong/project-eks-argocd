@@ -3,8 +3,6 @@ kind: AppProject
 metadata:
   name: voting
   namespace: argocd
-  annotations:
-    argocd.argoproj.io/sync-wave: "-30"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
