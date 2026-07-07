@@ -13,7 +13,7 @@ spec:
     path: argocd
     directory:
       recurse: true
-      exclude: '{00-root.yaml,apps/eso-resources/*,apps/tg-binding/*,apps/karpenter-nodes/*}'
+      exclude: '{00-root.yaml,eso-resources/**,karpenter-nodes/**}'
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd

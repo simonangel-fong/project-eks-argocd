@@ -8,11 +8,11 @@ metadata:
   finalizers:
     - argocd.argoproj.io/resources-finalizer
 spec:
-  project: default
+  project: platform
   source:
     repoURL: https://github.com/simonangel-fong/project-eks-argocd
     targetRevision: master
-    path: argocd/apps/karpenter-nodes
+    path: argocd/karpenter-nodes
     directory:
       recurse: true
   destination:

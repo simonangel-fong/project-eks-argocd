@@ -6,7 +6,7 @@ metadata:
   finalizers:
     - argocd.argoproj.io/resources-finalizer
 spec:
-  project: default
+  project: platform
   source:
     repoURL: https://prometheus-community.github.io/helm-charts
     chart: kube-prometheus-stack
