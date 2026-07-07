@@ -17,6 +17,8 @@ spec:
       releaseName: istiod
       values: |
         profile: ambient
+        env:
+          ENABLE_CLUSTER_TRUST_BUNDLE_API: true
   destination:
     server: https://kubernetes.default.svc
     namespace: istio-system
