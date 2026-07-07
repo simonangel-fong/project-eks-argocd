@@ -2,7 +2,6 @@
 
 refactor - next stage
 - istio abiemt
-- package app with helm
   - istio
   - eso
   - albc
