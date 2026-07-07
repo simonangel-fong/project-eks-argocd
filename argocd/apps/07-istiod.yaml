@@ -17,12 +17,6 @@ spec:
       releaseName: istiod
       values: |
         profile: ambient
-        pilot:
-          replicaCount: 1
-        env:
-          ENABLE_CLUSTER_TRUST_BUNDLE_API: "false"
-        meshConfig:
-          accessLogFile: /dev/stdout
   destination:
     server: https://kubernetes.default.svc
     namespace: istio-system
