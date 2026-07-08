@@ -32,7 +32,7 @@ locals {
   argocd_namespace = "argocd"
   argocd_repo      = "https://argoproj.github.io/argo-helm"
   argocd_chart     = "argo-cd"
-  argocd_chart_ver = "3.35.4"
+  argocd_chart_ver = "10.1.2"
   argocd_release   = "argocd"
 
   argocd_values = yamlencode({
