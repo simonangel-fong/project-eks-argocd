@@ -21,8 +21,8 @@ spec:
         dnsPolicy: Default
         replicas: 1
         settings:
-          clusterName: voting-dev
-          interruptionQueue: Karpenter-voting-dev
+          clusterName: eks-platform-dev
+          interruptionQueue: Karpenter-eks-platform-dev
         webhook:
           enabled: false
         serviceAccount:
