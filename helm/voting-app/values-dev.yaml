@@ -5,7 +5,7 @@ namespace:
 
 image:
   pullPolicy: Always
-  tag: v-metrics
+  tag: sha-ca490bf
 
 gateway:
   enabled: true
