@@ -27,4 +27,5 @@ spec:
           kind: Service
           name: {{ include "voting-app.api.fullname" . }}
           port: {{ .Values.service.port }}
+          weight: 1
 {{- end }}
