@@ -1,0 +1,43 @@
+{{- if .Values.tests.smokeExternal.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "voting-app.api.fullname" . }}-smoke-external
+  labels:
+    {{- include "voting-app.labels" . | nindent 4 }}
+    app.kubernetes.io/component: test
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 3600
+  activeDeadlineSeconds: 120
+  template:
+    metadata:
+      labels:
+        {{- include "voting-app.labels" . | nindent 8 }}
+        app.kubernetes.io/component: test
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: k6
+          image: {{ .Values.tests.k6.image }}
+          args: ["run", "/scripts/smoke.js"]
+          env:
+            - name: TARGET_URL
+              value: "https://{{ .Values.tests.smokeExternal.host }}"
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 128Mi
+      volumes:
+        - name: scripts
+          configMap:
+            name: {{ include "voting-app.api.fullname" . }}-k6-scripts
+{{- end }}

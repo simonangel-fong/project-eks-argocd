@@ -1,0 +1,132 @@
+{{- if or .Values.tests.smoke.enabled .Values.tests.smokeExternal.enabled .Values.tests.load.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "voting-app.api.fullname" . }}-k6-scripts
+  labels:
+    {{- include "voting-app.labels" . | nindent 4 }}
+    app.kubernetes.io/component: test
+data:
+  smoke.js: |
+    import http from 'k6/http';
+    import { check, fail } from 'k6';
+
+    const BASE = __ENV.TARGET_URL;
+
+    export const options = {
+      vus: 1,
+      iterations: 1,
+      thresholds: {
+        checks: ['rate==1.0'],
+        http_req_failed: ['rate<0.01'],
+        http_req_duration: ['p(95)<1000'],
+      },
+    };
+
+    export default function () {
+      const healthz = http.get(`${BASE}/healthz`);
+      check(healthz, { 'healthz 200': (r) => r.status === 200 }) || fail('healthz failed');
+
+      const readyz = http.get(`${BASE}/readyz`);
+      check(readyz, { 'readyz 200': (r) => r.status === 200 }) || fail('readyz failed');
+
+      const polls = http.get(`${BASE}/polls`);
+      const pollsOk = check(polls, {
+        'polls 200': (r) => r.status === 200,
+        'polls has >=2 items': (r) => {
+          try { return r.json().length >= 2; } catch { return false; }
+        },
+      });
+      if (!pollsOk) fail('polls list failed');
+
+      const poll1 = http.get(`${BASE}/polls/1`);
+      check(poll1, {
+        'poll 1 200': (r) => r.status === 200,
+        'poll 1 title matches': (r) => {
+          try { return r.json().title === 'Favorite programming language?'; } catch { return false; }
+        },
+      }) || fail('poll 1 fetch failed');
+
+      const vote = http.post(
+        `${BASE}/polls/1/vote`,
+        JSON.stringify({ option_id: 1 }),
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'X-User-Id': `smoke-${Date.now()}`,
+          },
+        },
+      );
+      check(vote, { 'vote 2xx': (r) => r.status >= 200 && r.status < 300 })
+        || fail(`vote failed status=${vote.status} body=${vote.body}`);
+
+      const results = http.get(`${BASE}/polls/1/results`);
+      check(results, {
+        'results 200': (r) => r.status === 200,
+        'results has tallies': (r) => {
+          try { return Array.isArray(r.json().tallies) && r.json().tallies.length > 0; } catch { return false; }
+        },
+      }) || fail('results failed');
+    }
+
+  load.js: |
+    import http from 'k6/http';
+    import { check, sleep } from 'k6';
+    import { Trend, Rate } from 'k6/metrics';
+
+    const BASE = __ENV.TARGET_URL;
+    const readLatency = new Trend('voting_read_latency', true);
+    const writeLatency = new Trend('voting_write_latency', true);
+    const writeErrors = new Rate('voting_write_errors');
+
+    export const options = {
+      thresholds: {
+        http_req_failed: ['rate<0.02'],
+        'http_req_duration{op:read}': ['p(95)<500'],
+        'http_req_duration{op:write}': ['p(95)<1500'],
+        iteration_duration: ['p(99)<3000'],
+      },
+      stages: [
+        { duration: '1m', target: 20 },
+        { duration: '3m', target: 20 },
+        { duration: '1m', target: 0 },
+      ],
+    };
+
+    function pickPollId() { return Math.random() < 0.5 ? 1 : 2; }
+    function pickOptionId() { return 1 + Math.floor(Math.random() * 4); }
+
+    export default function () {
+      const roll = Math.random();
+
+      if (roll < 0.7) {
+        const r = http.get(`${BASE}/polls`, { tags: { op: 'read' } });
+        readLatency.add(r.timings.duration);
+        check(r, { 'polls 200': (x) => x.status === 200 });
+      } else if (roll < 0.9) {
+        const id = pickPollId();
+        const r = http.get(`${BASE}/polls/${id}`, { tags: { op: 'read' } });
+        readLatency.add(r.timings.duration);
+        check(r, { 'poll 200': (x) => x.status === 200 });
+      } else {
+        const id = pickPollId();
+        const opt = pickOptionId();
+        const r = http.post(
+          `${BASE}/polls/${id}/vote`,
+          JSON.stringify({ option_id: opt }),
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'X-User-Id': `load-${__VU}-${__ITER}-${Date.now()}`,
+            },
+            tags: { op: 'write' },
+          },
+        );
+        writeLatency.add(r.timings.duration);
+        writeErrors.add(r.status < 200 || r.status >= 300);
+        check(r, { 'vote 2xx': (x) => x.status >= 200 && x.status < 300 });
+      }
+
+      sleep(0.5);
+    }
+{{- end }}
