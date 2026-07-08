@@ -1,40 +1,40 @@
-# apiVersion: argoproj.io/v1alpha1
-# kind: Application
-# metadata:
-#   name: karpenter
-#   namespace: argocd
-#   annotations:
-#     argocd.argoproj.io/sync-wave: "-20"
-#   finalizers:
-#     - argocd.argoproj.io/resources-finalizer
-# spec:
-#   project: platform
-#   source:
-#     repoURL: public.ecr.aws/karpenter
-#     chart: karpenter
-#     targetRevision: 1.6.0
-#     helm:
-#       releaseName: karpenter
-#       values: |
-#         nodeSelector:
-#           karpenter.sh/controller: "true"
-#         dnsPolicy: Default
-#         replicas: 1
-#         settings:
-#           clusterName: voting-dev
-#           interruptionQueue: Karpenter-voting-dev
-#         webhook:
-#           enabled: false
-#         serviceAccount:
-#           create: true
-#           name: karpenter
-#   destination:
-#     server: https://kubernetes.default.svc
-#     namespace: kube-system
-#   syncPolicy:
-#     automated:
-#       prune: true
-#       selfHeal: true
-#     syncOptions:
-#       - ServerSideApply=true
-#       - CreateNamespace=false
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: platform-karpenter
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
+  finalizers:
+    - argocd.argoproj.io/resources-finalizer
+spec:
+  project: platform
+  source:
+    repoURL: public.ecr.aws/karpenter
+    chart: karpenter
+    targetRevision: 1.6.0
+    helm:
+      releaseName: karpenter
+      values: |
+        nodeSelector:
+          karpenter.sh/controller: "true"
+        dnsPolicy: Default
+        replicas: 1
+        settings:
+          clusterName: voting-dev
+          interruptionQueue: Karpenter-voting-dev
+        webhook:
+          enabled: false
+        serviceAccount:
+          create: true
+          name: karpenter
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+      - CreateNamespace=false

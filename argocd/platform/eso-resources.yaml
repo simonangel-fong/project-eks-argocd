@@ -1,24 +1,24 @@
-# apiVersion: argoproj.io/v1alpha1
-# kind: Application
-# metadata:
-#   name: eso-resources
-#   namespace: argocd
-#   annotations:
-#     argocd.argoproj.io/sync-wave: "-10"
-#   finalizers:
-#     - argocd.argoproj.io/resources-finalizer
-# spec:
-#   project: platform
-#   source:
-#     repoURL: https://github.com/simonangel-fong/project-eks-argocd
-#     targetRevision: master
-#     path: argocd/platform/eso-resources
-#   destination:
-#     server: https://kubernetes.default.svc
-#     namespace: external-secrets
-#   syncPolicy:
-#     automated:
-#       prune: true
-#       selfHeal: true
-#     syncOptions:
-#       - CreateNamespace=true
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: platform-eso-resources
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
+  finalizers:
+    - argocd.argoproj.io/resources-finalizer
+spec:
+  project: platform
+  source:
+    repoURL: https://github.com/simonangel-fong/project-eks-argocd
+    targetRevision: master
+    path: argocd/platform/eso-resources
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: external-secrets
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
