@@ -55,8 +55,8 @@ resource "aws_secretsmanager_secret" "eso_cloudflare" {
   name = "${local.common_name}/cloudflare-api-token"
 }
 
-# resource "aws_secretsmanager_secret_version" "cloudflare" {
-#   secret_id     = aws_secretsmanager_secret.eso_cloudflare.id
-#   secret_string = jsonencode({ apiToken = var.cloudflare_api_token })
-# }
+resource "aws_secretsmanager_secret_version" "cloudflare" {
+  secret_id     = aws_secretsmanager_secret.eso_cloudflare.id
+  secret_string = jsonencode({ apiToken = var.cloudflare_api_token })
+}
 
