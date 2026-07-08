@@ -1,29 +1,25 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: platform-istio-cni
+  name: platform-gateway-api-crds
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "-13"
+    argocd.argoproj.io/sync-wave: "-16"
   finalizers:
     - argocd.argoproj.io/resources-finalizer
 spec:
   project: platform
   source:
-    repoURL: https://istio-release.storage.googleapis.com/charts
-    chart: cni
-    targetRevision: 1.30.2
-    helm:
-      releaseName: istio-cni
-      values: |
-        profile: ambient
+    repoURL: https://github.com/kubernetes-sigs/gateway-api
+    targetRevision: v1.6.0
+    path: config/crd/experimental
   destination:
     server: https://kubernetes.default.svc
-    namespace: istio-system
+    namespace: default
   syncPolicy:
     automated:
-      prune: true
+      prune: false
       selfHeal: true
     syncOptions:
-      - CreateNamespace=true
       - ServerSideApply=true
+      - Replace=true
