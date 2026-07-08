@@ -30,5 +30,5 @@ tests:
     enabled: true
     host: voting.arguswatcher.net
   load:
-    enabled: false
+    enabled: true
     targetUrl: https://voting.arguswatcher.net
