@@ -18,7 +18,7 @@ spec:
       values: |
         clusterName: eks-platform-dev
         region: ca-central-1
-        vpcId: vpc-032a91138ee8d6c02
+        vpcId: vpc-0a8336dc48809cc52
         serviceAccount:
           create: true
           name: aws-load-balancer-controller

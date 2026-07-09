@@ -1,26 +1,25 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: 10-platform
+  name: platform-istio-gateway
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "-50"
+    argocd.argoproj.io/sync-wave: "-11"
   finalizers:
     - argocd.argoproj.io/resources-finalizer
 spec:
-  project: default
+  project: platform
   source:
     repoURL: https://github.com/simonangel-fong/project-eks-argocd
     targetRevision: master
-    path: argocd/platform
-    directory:
-      recurse: false
+    path: argocd/platform-capabilities/networking/istio-gateway
   destination:
     server: https://kubernetes.default.svc
-    namespace: argocd
+    namespace: istio-ingress
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
-      - ApplyOutOfSyncOnly=true
+      - CreateNamespace=true
+      - ServerSideApply=true

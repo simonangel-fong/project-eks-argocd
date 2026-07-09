@@ -24,3 +24,11 @@ module "karpenter" {
 
   enable_inline_policy = true
 }
+
+# tag for private subnet
+resource "aws_ec2_tag" "karpenter_discovery_subnets" {
+  for_each    = toset(module.vpc.private_subnet_ids)
+  resource_id = each.value
+  key         = "karpenter.sh/discovery"
+  value       = local.common_name
+}
