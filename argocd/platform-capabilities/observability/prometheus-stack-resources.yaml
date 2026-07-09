@@ -12,7 +12,7 @@ spec:
   source:
     repoURL: https://github.com/simonangel-fong/project-eks-argocd
     targetRevision: master
-    path: argocd/platform/prometheus-stack-resources
+    path: argocd/platform-capabilities/observability/prometheus-stack-resources
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
