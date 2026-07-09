@@ -21,9 +21,13 @@ locals {
   # ##############################
   # EKS
   # ##############################
-  eks_name              = local.common_name
-  eks_version           = "1.36"
-  eks_node_type         = "t3.large"
+  eks_name    = local.common_name
+  eks_version = "1.36"
+  # Bootstrap nodes host platform controllers (Prometheus, Loki, Grafana,
+  # Alertmanager, cert-manager, ESO, Karpenter, Kyverno, Istio istiod/CNI/ztunnel,
+  # ArgoCD). Baseline ~6-8 vCPU. t3.xlarge x2 = 8 vCPU, comfortable.
+  # Workload pods scale onto Karpenter-provisioned nodes.
+  eks_node_type         = "t3.xlarge"
   eks_node_desired_size = 2
 
   # ##############################
