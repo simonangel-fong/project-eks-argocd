@@ -60,6 +60,14 @@ spec:
               memory: 256Mi
             limits:
               memory: 512Mi
+        # SingleBinary mode requires the scalable components to be zeroed.
+        # Chart 7.x defaults them to non-zero — must override explicitly.
+        read:
+          replicas: 0
+        write:
+          replicas: 0
+        backend:
+          replicas: 0
         serviceAccount:
           create: true
           name: loki
