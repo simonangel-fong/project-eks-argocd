@@ -3,6 +3,9 @@ kind: Application
 metadata:
   name: platform-observability
   namespace: argocd
+  labels:
+    scope: platform
+    capability: observability
   annotations:
     argocd.argoproj.io/sync-wave: "-20"
   finalizers:

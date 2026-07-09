@@ -3,6 +3,9 @@ kind: Application
 metadata:
   name: platform-kyverno
   namespace: argocd
+  labels:
+    scope: platform
+    capability: security
   annotations:
     argocd.argoproj.io/sync-wave: "-14"
   finalizers:

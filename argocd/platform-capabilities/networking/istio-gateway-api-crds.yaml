@@ -3,6 +3,9 @@ kind: Application
 metadata:
   name: platform-gateway-api-crds
   namespace: argocd
+  labels:
+    scope: platform
+    capability: networking
   annotations:
     argocd.argoproj.io/sync-wave: "-16"
   finalizers:

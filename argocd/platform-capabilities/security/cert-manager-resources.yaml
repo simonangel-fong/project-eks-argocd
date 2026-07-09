@@ -3,6 +3,9 @@ kind: Application
 metadata:
   name: platform-cert-manager-resources
   namespace: argocd
+  labels:
+    scope: platform
+    capability: security
   annotations:
     argocd.argoproj.io/sync-wave: "-10"
   finalizers:
