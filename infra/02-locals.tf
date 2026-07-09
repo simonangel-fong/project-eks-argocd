@@ -21,23 +21,52 @@ locals {
   # ##############################
   # EKS
   # ##############################
-  eks_name    = local.common_name
-  eks_version = "1.36"
-  # Bootstrap nodes host platform controllers (Prometheus, Loki, Grafana,
-  # Alertmanager, cert-manager, ESO, Karpenter, Kyverno, Istio istiod/CNI/ztunnel,
-  # ArgoCD). Baseline ~6-8 vCPU. t3.xlarge x2 = 8 vCPU, comfortable.
-  # Workload pods scale onto Karpenter-provisioned nodes.
+  eks_name              = local.common_name
+  eks_version           = "1.36"
+  eks_node_name         = "bootstrap"
   eks_node_type         = "t3.xlarge"
   eks_node_desired_size = 2
 
   # ##############################
+  # EKS CSI
+  # ##############################
+  eks_csi_service_account = "ebs-csi-controller-sa"
+
+  # ##############################
+  # Karpenter
+  # ##############################
+  karpenter_namespace       = "kube-system"
+  karpenter_service_account = "karpenter"
+  karpenter_chart_ver       = "1.6.0"
+
+  # ##############################
+  # AWS Load Balancer Controller
+  # ##############################
+  albc_namespace       = "kube-system"
+  albc_service_account = "aws-load-balancer-controller"
+
+  # ##############################
+  # ESO
+  # ##############################
+  eso_namespace       = "external-secrets"
+  eso_service_account = "external-secrets"
+
+  # ##############################
+  # Monitoring: Loki
+  # ##############################
+  loki_namespace       = "monitoring"
+  loki_service_account = "loki"
+  loki_bucket_name     = "${local.common_name}-loki"
+
+
+  # ##############################
   # ArgoCD
   # ##############################
-  argocd_namespace = "argocd"
-  argocd_repo      = "https://argoproj.github.io/argo-helm"
-  argocd_chart     = "argo-cd"
-  argocd_chart_ver = "10.1.2"
-  argocd_release   = "argocd"
+  argocd_namespace     = "argocd"
+  argocd_repo          = "https://argoproj.github.io/argo-helm"
+  argocd_chart         = "argo-cd"
+  argocd_chart_version = "10.1.2"
+  argocd_release       = "argocd"
 
   argocd_values = yamlencode({
     server = {
@@ -57,13 +86,6 @@ locals {
       }
     }
   })
-
-  # ##############################
-  # Karpenter
-  # ##############################
-  karpenter_namespace       = "kube-system"
-  karpenter_service_account = "karpenter"
-  karpenter_chart_ver       = "1.6.0"
 }
 
 

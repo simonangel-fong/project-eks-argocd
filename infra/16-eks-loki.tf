@@ -1,16 +1,7 @@
 # eks-loki.tf
-#
-# Loki uses S3 for chunk and index storage. Access is via Pod Identity —
-# same pattern as ESO. No long-lived credentials, IAM scoped to one bucket.
-
-locals {
-  loki_namespace       = "monitoring"
-  loki_service_account = "loki"
-  loki_bucket_name     = "${local.common_name}-loki"
-}
 
 # ##############################
-# S3 bucket for Loki chunks + index
+# S3 bucket: Loki
 # ##############################
 resource "aws_s3_bucket" "loki" {
   bucket        = local.loki_bucket_name
@@ -34,8 +25,7 @@ resource "aws_s3_bucket_public_access_block" "loki" {
   restrict_public_buckets = true
 }
 
-# Log retention — expire chunks after 30d.
-# Loki also tracks retention internally; the S3 lifecycle is a safety net.
+# Log retention: expire chunks after 30d.
 resource "aws_s3_bucket_lifecycle_configuration" "loki" {
   bucket = aws_s3_bucket.loki.id
   rule {

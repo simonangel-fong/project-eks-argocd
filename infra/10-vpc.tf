@@ -1,33 +1,10 @@
 # vpc.tf
 module "vpc" {
-  source  = "terraform-aws-modules/vpc/aws"
-  version = "~> 5.0"
+  source = "git::https://github.com/simonangel-fong/terraform-template.git//aws/vpc-dev"
 
-  name = local.common_name
-  cidr = local.vpc_cidr
-  azs  = local.subnet_azs
+  name       = local.common_name
+  cidr_block = "10.0.0.0/16"
+  az_count   = 3
 
-  # NAT
-  enable_nat_gateway     = true
-  single_nat_gateway     = true
-  one_nat_gateway_per_az = false
-
-  # DNS
-  enable_dns_hostnames = true
-  enable_dns_support   = true
-
-  # public subnets
-  public_subnets = ["10.0.240.0/24", "10.0.241.0/24"]
-  public_subnet_tags = {
-    "kubernetes.io/role/elb"                  = 1
-    "kubernetes.io/cluster/${local.eks_name}" = "shared"
-  }
-
-  # private subnets
-  private_subnets = ["10.0.0.0/20", "10.0.16.0/20"]
-  private_subnet_tags = {
-    "kubernetes.io/role/internal-elb"         = 1
-    "kubernetes.io/cluster/${local.eks_name}" = "shared"
-    "karpenter.sh/discovery"                  = local.eks_name
-  }
+  tags = local.default_tags
 }

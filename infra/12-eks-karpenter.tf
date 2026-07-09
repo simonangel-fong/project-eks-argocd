@@ -12,7 +12,6 @@ module "karpenter" {
   namespace       = local.karpenter_namespace
   service_account = local.karpenter_service_account
 
-  # Node role name is referenced by EC2NodeClass in phase 7.7 — keep it stable.
   node_iam_role_use_name_prefix = false
   node_iam_role_name            = "${local.common_name}-karpenter-node"
 
@@ -23,7 +22,5 @@ module "karpenter" {
   create_pod_identity_association = true
   enable_spot_termination         = true
 
-  # Standard IAM policies cap at 6,144 chars; Karpenter's controller policy
-  # exceeds that. Inline policies allow up to 10,240 chars.
   enable_inline_policy = true
 }

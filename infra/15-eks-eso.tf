@@ -1,10 +1,5 @@
 # eks-eso.tf
 
-locals {
-  eso_namespace       = "external-secrets"
-  eso_service_account = "external-secrets"
-}
-
 # ##############################
 # IAM role: ESO
 # ##############################
@@ -26,7 +21,6 @@ data "aws_iam_policy_document" "eso_read" {
     ]
     resources = [
       aws_secretsmanager_secret.eso_cloudflare.arn,
-      aws_secretsmanager_secret.eso_grafana_admin.arn,
       aws_secretsmanager_secret.eso_slack_webhook.arn,
     ]
   }
@@ -51,7 +45,7 @@ resource "aws_eks_pod_identity_association" "eso" {
 }
 
 # ##############################
-# ESO Secrets
+# Secrets: cloudflare-api-token
 # ##############################
 resource "aws_secretsmanager_secret" "eso_cloudflare" {
   name = "${local.common_name}/cloudflare-api-token"
@@ -62,23 +56,9 @@ resource "aws_secretsmanager_secret_version" "cloudflare" {
   secret_string = jsonencode({ apiToken = var.cloudflare_api_token })
 }
 
-resource "aws_secretsmanager_secret" "eso_grafana_admin" {
-  name = "${local.common_name}/grafana-admin"
-}
-
-resource "random_password" "grafana_admin" {
-  length  = 24
-  special = false
-}
-
-resource "aws_secretsmanager_secret_version" "grafana_admin" {
-  secret_id = aws_secretsmanager_secret.eso_grafana_admin.id
-  secret_string = jsonencode({
-    admin-user     = "admin"
-    admin-password = random_password.grafana_admin.result
-  })
-}
-
+# ##############################
+# Secrets: slack-webhook
+# ##############################
 resource "aws_secretsmanager_secret" "eso_slack_webhook" {
   name = "${local.common_name}/slack-webhook"
 }
