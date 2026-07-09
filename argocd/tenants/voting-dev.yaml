@@ -1,0 +1,38 @@
+# Voting dev environment.
+# Smaller quota, `edit` RBAC so devs can experiment via kubectl if needed.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tenant-voting-dev
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-4"
+  finalizers:
+    - argocd.argoproj.io/resources-finalizer
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/simonangel-fong/project-eks-argocd
+    targetRevision: master
+    path: helm/team-namespace
+    helm:
+      values: |
+        team: voting
+        environment: dev
+        quota:
+          cpu: "4"
+          memory: "8Gi"
+          pods: "20"
+          pvc: "5"
+          services: "5"
+        rbac:
+          clusterRole: edit
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true

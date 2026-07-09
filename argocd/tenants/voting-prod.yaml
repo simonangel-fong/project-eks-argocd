@@ -1,0 +1,38 @@
+# Voting prod environment.
+# Larger quota; `view` RBAC — deploys via GitOps only, no kubectl.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tenant-voting-prod
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-4"
+  finalizers:
+    - argocd.argoproj.io/resources-finalizer
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/simonangel-fong/project-eks-argocd
+    targetRevision: master
+    path: helm/team-namespace
+    helm:
+      values: |
+        team: voting
+        environment: prod
+        quota:
+          cpu: "10"
+          memory: "20Gi"
+          pods: "50"
+          pvc: "10"
+          services: "10"
+        rbac:
+          clusterRole: view
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true

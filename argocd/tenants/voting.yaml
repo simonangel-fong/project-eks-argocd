@@ -1,0 +1,39 @@
+# Team-level tenancy for voting.
+# Creates: ArgoCD AppProject `voting`, Grafana folder placeholder,
+# Alertmanager routes (#voting-alerts, #voting-oncall).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tenant-voting
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-5"
+  finalizers:
+    - argocd.argoproj.io/resources-finalizer
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/simonangel-fong/project-eks-argocd
+    targetRevision: master
+    path: helm/team
+    helm:
+      values: |
+        team: voting
+        subdomain: voting.arguswatcher.net
+        environments:
+          - dev
+          - prod
+        sourceRepos:
+          - https://github.com/simonangel-fong/project-voting-app
+        slack:
+          alerts: "#voting-alerts"
+          oncall: "#voting-oncall"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
