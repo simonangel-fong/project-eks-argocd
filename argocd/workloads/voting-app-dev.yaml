@@ -1,0 +1,39 @@
+# Voting-app dev deployment. Chart source lives in the team's repo;
+# ArgoCD Application is committed here (platform repo) for auditability.
+# CODEOWNERS entry: /argocd/workloads/voting-app-*.yaml → @voting-team
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: voting-app-dev
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  finalizers:
+    - argocd.argoproj.io/resources-finalizer
+spec:
+  project: voting
+  source:
+    repoURL: https://github.com/simonangel-fong/voting-app
+    targetRevision: master
+    path: helm/voting-app
+    helm:
+      releaseName: voting-app
+      valueFiles:
+        - values.yaml
+        - values-dev.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: voting-dev
+  ignoreDifferences:
+    # StatefulSet volumeClaimTemplates are immutable and get server-mutated —
+    # standard drift pattern, safe to ignore.
+    - group: apps
+      kind: StatefulSet
+      jsonPointers:
+        - /spec/volumeClaimTemplates
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true

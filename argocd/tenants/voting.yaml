@@ -24,7 +24,7 @@ spec:
           - dev
           - prod
         sourceRepos:
-          - https://github.com/simonangel-fong/project-voting-app
+          - https://github.com/simonangel-fong/voting-app
         slack:
           alerts: "#voting-alerts"
           oncall: "#voting-oncall"
