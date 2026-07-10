@@ -27,7 +27,7 @@ spec:
           - arguswatcher.net
         policy: upsert-only
         registry: txt
-        txtOwnerId: eks-platform-dev
+        txtOwnerId: multi-tenant-eks-dev
         txtPrefix: "extdns-"
         env:
           - name: CF_API_TOKEN

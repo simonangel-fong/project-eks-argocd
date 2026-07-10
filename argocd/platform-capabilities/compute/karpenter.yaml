@@ -24,8 +24,8 @@ spec:
         dnsPolicy: Default
         replicas: 1
         settings:
-          clusterName: eks-platform-dev
-          interruptionQueue: Karpenter-eks-platform-dev
+          clusterName: multi-tenant-eks-dev
+          interruptionQueue: Karpenter-multi-tenant-eks-dev
         webhook:
           enabled: false
         serviceAccount:

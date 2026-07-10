@@ -2,7 +2,7 @@
 variable "project" {
   description = "Project name, used as a prefix for all resources."
   type        = string
-  default     = "eks-platform"
+  default     = "multi-tenant-eks"
 }
 
 variable "env" {

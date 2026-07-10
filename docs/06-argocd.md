@@ -31,7 +31,7 @@ argocd/
 Required before any admin action. Points kubeconfig at the cluster, exposes the ArgoCD UI locally, and authenticates the `argocd` CLI.
 
 ```sh
-aws eks update-kubeconfig --region ca-central-1 --name eks-platform-dev
+aws eks update-kubeconfig --region ca-central-1 --name multi-tenant-eks-dev
 
 # open the UI locally
 kubectl -n argocd port-forward svc/argocd-server 8080:443
@@ -57,7 +57,7 @@ argocd app list
   - From that point on, Argo self-manages via git.
 
 ```sh
-aws eks update-kubeconfig --region ca-central-1 --name eks-platform-dev
+aws eks update-kubeconfig --region ca-central-1 --name multi-tenant-eks-dev
 
 # hand control to the root app-of-apps
 kubectl apply -f argocd/root.yaml
@@ -126,6 +126,7 @@ kubectl -n argocd patch app/karpenter       --type merge -p '{"metadata":{"final
 kubectl -n argocd patch app/istio-gateway   --type merge -p '{"metadata":{"finalizers":[]}}'
 
 # clean up
+kubectl delete apps --all -n argocd
 kubectl get apps -n argocd -o name | xargs -I {} kubectl patch {} -n argocd --type=merge -p '{"metadata":{"finalizers":[]}}'
 
 

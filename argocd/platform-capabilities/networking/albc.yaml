@@ -19,7 +19,7 @@ spec:
     helm:
       releaseName: aws-load-balancer-controller
       values: |
-        clusterName: eks-platform-dev
+        clusterName: multi-tenant-eks-dev
         region: ca-central-1
         vpcId: vpc-0ed236d4a110ac9ef
         serviceAccount:

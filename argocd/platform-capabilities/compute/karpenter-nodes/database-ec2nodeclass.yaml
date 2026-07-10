@@ -6,15 +6,15 @@ kind: EC2NodeClass
 metadata:
   name: database
 spec:
-  role: eks-platform-dev-karpenter-node
+  role: multi-tenant-eks-dev-karpenter-node
   amiSelectorTerms:
     - alias: al2023@latest
   subnetSelectorTerms:
     - tags:
-        karpenter.sh/discovery: eks-platform-dev
+        karpenter.sh/discovery: multi-tenant-eks-dev
   securityGroupSelectorTerms:
     - tags:
-        karpenter.sh/discovery: eks-platform-dev
+        karpenter.sh/discovery: multi-tenant-eks-dev
   blockDeviceMappings:
     - deviceName: /dev/xvda
       ebs:
@@ -28,5 +28,5 @@ spec:
     httpPutResponseHopLimit: 1
     httpTokens: required
   tags:
-    karpenter.sh/discovery: eks-platform-dev
+    karpenter.sh/discovery: multi-tenant-eks-dev
     workload-class: database

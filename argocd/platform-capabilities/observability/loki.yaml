@@ -27,9 +27,9 @@ spec:
           storage:
             type: s3
             bucketNames:
-              chunks: eks-platform-dev-loki
-              ruler: eks-platform-dev-loki
-              admin: eks-platform-dev-loki
+              chunks: multi-tenant-eks-dev-loki
+              ruler: multi-tenant-eks-dev-loki
+              admin: multi-tenant-eks-dev-loki
             s3:
               region: ca-central-1
               s3ForcePathStyle: false
