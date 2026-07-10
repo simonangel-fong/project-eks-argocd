@@ -69,6 +69,16 @@ locals {
   argocd_release       = "argocd"
 
   argocd_values = yamlencode({
+    global = {
+      tolerations = [
+        {
+          key      = "workload-class"
+          operator = "Equal"
+          value    = "platform"
+          effect   = "NoSchedule"
+        },
+      ]
+    }
     server = {
       service = {
         type = "ClusterIP"
