@@ -1,17 +1,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
-  name: voting
+  name: team-b
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
-  description: Voting workload
+  description: team-b workload
   sourceRepos:
     - https://github.com/simonangel-fong/project-eks-argocd
   destinations:
     - server: https://kubernetes.default.svc
-      namespace: voting
+      namespace: team-b
   clusterResourceWhitelist:
     - group: gateway.networking.k8s.io
       kind: '*'

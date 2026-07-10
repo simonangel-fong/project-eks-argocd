@@ -1,7 +1,7 @@
 # apiVersion: argoproj.io/v1alpha1
 # kind: Application
 # metadata:
-#   name: 20-workloads
+#   name: 03-tenants
 #   namespace: argocd
 #   annotations:
 #     argocd.argoproj.io/sync-wave: "0"
@@ -12,7 +12,7 @@
 #   source:
 #     repoURL: https://github.com/simonangel-fong/project-eks-argocd
 #     targetRevision: master
-#     path: argocd/workloads
+#     path: argocd/03-tenants
 #     directory:
 #       recurse: true
 #   destination:

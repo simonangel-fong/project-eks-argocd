@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
-  name: todo
+  name: team-a
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
@@ -11,7 +11,7 @@ spec:
     - https://github.com/simonangel-fong/project-eks-argocd
   destinations:
     - server: https://kubernetes.default.svc
-      namespace: todo
+      namespace: team-a
   clusterResourceWhitelist:
     - group: ''
       kind: Namespace

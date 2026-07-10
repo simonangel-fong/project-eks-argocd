@@ -1,10 +1,10 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: 01-projects
+  name: 10-platform
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "-100"
+    argocd.argoproj.io/sync-wave: "-50"
   finalizers:
     - argocd.argoproj.io/resources-finalizer
 spec:
@@ -12,13 +12,22 @@ spec:
   source:
     repoURL: https://github.com/simonangel-fong/project-eks-argocd
     targetRevision: master
-    path: argocd/projects
+    path: argocd/03-capabilities
+    directory:
+      recurse: true
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
+  ignoreDifferences:
+    - group: argoproj.io
+      kind: Application
+      jsonPointers:
+        - /spec/source/directory
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - ApplyOutOfSyncOnly=true
+      - ServerSideApply=true
+      - RespectIgnoreDifferences=true
