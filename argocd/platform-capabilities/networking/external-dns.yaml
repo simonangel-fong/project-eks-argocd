@@ -48,6 +48,11 @@ spec:
             memory: 64Mi
           limits:
             memory: 128Mi
+        tolerations:
+          - key: workload-class
+            operator: Equal
+            value: platform
+            effect: NoSchedule
   destination:
     server: https://kubernetes.default.svc
     namespace: external-dns

@@ -19,6 +19,12 @@ spec:
     helm:
       values: |
         profile: ambient
+        pilot:
+          tolerations:
+            - key: workload-class
+              operator: Equal
+              value: platform
+              effect: NoSchedule
   destination:
     server: https://kubernetes.default.svc
     namespace: istio-system
