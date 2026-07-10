@@ -1,0 +1,20 @@
+{{- if .Values.db.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: todo-db-init
+  labels:
+    {{- include "todo.commonLabels" . | nindent 4 }}
+    app.kubernetes.io/component: db
+data:
+  init.sql: |
+    CREATE TABLE IF NOT EXISTS todos (
+      id          SERIAL PRIMARY KEY,
+      title       TEXT NOT NULL,
+      done        BOOLEAN NOT NULL DEFAULT FALSE,
+      created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    INSERT INTO todos (title, done)
+      SELECT 'Deploy EKS cluster', TRUE
+      WHERE NOT EXISTS (SELECT 1 FROM todos);
+{{- end }}

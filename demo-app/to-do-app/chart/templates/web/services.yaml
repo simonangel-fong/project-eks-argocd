@@ -1,0 +1,33 @@
+{{- if .Values.web.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-web
+  labels:
+    {{- include "todo.commonLabels" . | nindent 4 }}
+    app.kubernetes.io/component: web
+spec:
+  selector:
+    app.kubernetes.io/component: web
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  ports:
+    - name: http
+      port: 80
+      targetPort: {{ .Values.web.port }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-web-canary
+  labels:
+    {{- include "todo.commonLabels" . | nindent 4 }}
+    app.kubernetes.io/component: web
+spec:
+  selector:
+    app.kubernetes.io/component: web
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  ports:
+    - name: http
+      port: 80
+      targetPort: {{ .Values.web.port }}
+{{- end }}

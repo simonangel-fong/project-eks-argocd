@@ -1,0 +1,48 @@
+{{- if .Values.istio.enabled }}
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: todo-api
+  labels:
+    {{- include "todo.commonLabels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+spec:
+  hosts:
+    - {{ .Values.global.host | quote }}
+  gateways:
+    - {{ .Values.istio.gateway }}
+  http:
+    - name: primary
+      match:
+        - uri:
+            prefix: /api/
+      route:
+        - destination:
+            host: todo-api
+          weight: 100
+        - destination:
+            host: todo-api-canary
+          weight: 0
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: todo-web
+  labels:
+    {{- include "todo.commonLabels" . | nindent 4 }}
+    app.kubernetes.io/component: web
+spec:
+  hosts:
+    - {{ .Values.global.host | quote }}
+  gateways:
+    - {{ .Values.istio.gateway }}
+  http:
+    - name: primary
+      route:
+        - destination:
+            host: todo-web
+          weight: 100
+        - destination:
+            host: todo-web-canary
+          weight: 0
+{{- end }}

@@ -1,0 +1,33 @@
+{{- if .Values.api.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-api
+  labels:
+    {{- include "todo.commonLabels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+spec:
+  selector:
+    app.kubernetes.io/component: api
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  ports:
+    - name: http
+      port: 80
+      targetPort: {{ .Values.api.port }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-api-canary
+  labels:
+    {{- include "todo.commonLabels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+spec:
+  selector:
+    app.kubernetes.io/component: api
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  ports:
+    - name: http
+      port: 80
+      targetPort: {{ .Values.api.port }}
+{{- end }}

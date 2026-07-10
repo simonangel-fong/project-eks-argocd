@@ -47,4 +47,13 @@ cd demo-app/to-do-app
 docker compose up --build
 
 curl localhost:8080/api/todos
+# [{"id":3,"title":"Ship canary rollout","done":true,"created_at":"2026-07-09T23:41:06.404Z"},{"id":2,"title":"Wire up ArgoCD","done":true,"created_at":"2026-07-09T23:41:06.404Z"},{"id":1,"title":"Deploy EKS cluster","done":true,"created_at":"2026-07-09T23:41:06.404Z"}]
+
+
+docker build -t simonangelfong/todo-app:api-v1  demo-app/to-do-app/api
+docker push simonangelfong/todo-app:api-v1
+
+docker build -t simonangelfong/todo-app:web-v1  demo-app/to-do-app/web
+docker push simonangelfong/todo-app:web-v1
+
 ```

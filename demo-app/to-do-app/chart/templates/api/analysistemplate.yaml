@@ -1,0 +1,30 @@
+{{- if .Values.api.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: todo-api-success-rate
+  labels:
+    {{- include "todo.commonLabels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+spec:
+  metrics:
+    - name: success-rate
+      interval: 30s
+      count: 3
+      successCondition: result[0] >= {{ .Values.analysis.prometheus.successRateThreshold | quote }}
+      failureLimit: 1
+      provider:
+        prometheus:
+          address: {{ .Values.analysis.prometheus.address | quote }}
+          query: |
+            sum(irate(istio_requests_total{
+              reporter="destination",
+              destination_service_name="todo-api-canary",
+              response_code!~"5.."
+            }[1m]))
+            /
+            sum(irate(istio_requests_total{
+              reporter="destination",
+              destination_service_name="todo-api-canary"
+            }[1m]))
+{{- end }}

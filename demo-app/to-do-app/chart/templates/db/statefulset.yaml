@@ -1,0 +1,61 @@
+{{- if .Values.db.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: todo-db
+  labels:
+    {{- include "todo.commonLabels" . | nindent 4 }}
+    app.kubernetes.io/component: db
+spec:
+  serviceName: todo-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: db
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        {{- include "todo.commonLabels" . | nindent 8 }}
+        app.kubernetes.io/component: db
+    spec:
+      containers:
+        - name: postgres
+          image: "{{ .Values.db.image.repository }}:{{ .Values.db.image.tag }}"
+          ports:
+            - name: postgres
+              containerPort: 5432
+          envFrom:
+            - secretRef:
+                name: todo-db
+          env:
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+            - name: init
+              mountPath: /docker-entrypoint-initdb.d
+          readinessProbe:
+            exec: { command: ["pg_isready", "-U", "{{ .Values.db.user }}"] }
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            exec: { command: ["pg_isready", "-U", "{{ .Values.db.user }}"] }
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources: {{- toYaml .Values.db.resources | nindent 12 }}
+      volumes:
+        - name: init
+          configMap:
+            name: todo-db-init
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: {{ .Values.db.storage.className | quote }}
+        resources:
+          requests:
+            storage: {{ .Values.db.storage.size | quote }}
+{{- end }}
