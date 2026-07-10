@@ -57,3 +57,10 @@ docker build -t simonangelfong/todo-app:web-v1  demo-app/to-do-app/web
 docker push simonangelfong/todo-app:web-v1
 
 ```
+
+- join platform
+  - projects/todo.yaml
+  - workloads/todo-app.yaml
+
+```sh
+```
