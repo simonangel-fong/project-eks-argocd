@@ -21,6 +21,8 @@ spec:
       values: |
         clusterName: multi-tenant-eks-dev
         region: ca-central-1
+        vpcTags:
+          Name: multi-tenant-eks-dev
         serviceAccount:
           create: true
           name: aws-load-balancer-controller

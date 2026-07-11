@@ -5,7 +5,7 @@
 # ##############################
 # AWS-published policy JSON (pin to a known-good release)
 data "http" "albc_policy" {
-  url = "https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.9.2/docs/install/iam_policy.json"
+  url = "https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v3.4.1/docs/install/iam_policy.json"
 }
 
 data "aws_iam_policy_document" "albc_trust" {
