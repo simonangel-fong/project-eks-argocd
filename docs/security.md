@@ -48,26 +48,51 @@
 | Pod Identity role for tenant workloads         |    ✅    |        | Created per tenant on request (same pattern as Phase 02 S3 access).           |
 | `ServiceAccount` → workload wiring             |          |   ✅   | Tenants set `spec.serviceAccountName`.                                        |
 | Kyverno `ClusterPolicy` set                    |    ✅    |        | Cluster-wide; tenants cannot bypass or edit.                                  |
-| Istio ambient enrollment (namespace label)     |    ✅    |        | Applied at namespace creation; enables mTLS without sidecars.                 |
+| Istio ambient enrollment (namespace label)     |    ⚠️    |        | Deferred — kubelet probe interaction requires Waypoint proxy; see "Ambient experiment". |
 | Pod-level `securityContext`                    |          |   ✅   | Tenants set non-root, drop capabilities, seccomp — Kyverno enforces baseline. |
 
 #### Isolation model
 
-Four layers, each enforced by a different mechanism. Any one alone is insufficient; together they form the tenant boundary.
+Three layers today, each enforced by a different mechanism. Any one alone is insufficient; together they form the tenant boundary.
 
 | Layer        | Mechanism                                      | What it stops                                                                     |
 | ------------ | ---------------------------------------------- | --------------------------------------------------------------------------------- |
 | Namespace    | Kubernetes namespace + RBAC                    | Tenant A cannot `get / list / patch` Tenant B's objects.                          |
 | Network (L3) | NetworkPolicy — default deny + selective allow | Tenant A pods cannot open TCP/UDP to Tenant B pods.                               |
-| Network (L7) | Istio ambient AuthorizationPolicy + mTLS       | Even if L3 allows, workload identity is required; traffic is encrypted.           |
-| Resources    | `ResourceQuota` + `LimitRange`                 | Tenant A cannot consume so much CPU / memory / PVC storage that Tenant B starves. |
+| Resources   | `ResourceQuota` + `LimitRange`                 | Tenant A cannot consume so much CPU / memory / PVC storage that Tenant B starves. |
+
+An L7 identity layer (Istio ambient + `AuthorizationPolicy`) is deferred — see "Ambient experiment" below.
 
 Design principles:
 
 - **Default deny, explicit allow.** Every NetworkPolicy is default-deny at namespace creation. Tenants add allow-rules for the ingress paths they need.
-- **Identity is the primary boundary.** L7 policy is expressed in terms of ServiceAccount identity, not IP. IPs are ephemeral; identity is stable and encoded in the mTLS handshake.
-- **Ambient mTLS is opt-in per namespace, mandatory for tenants.** Namespaces created by the onboarding flow are labeled `istio.io/dataplane-mode=ambient`; platform namespaces that predate ambient may not be enrolled.
+- **L3 is the current isolation boundary.** IP/port-based NetworkPolicy stops cross-tenant traffic today. Identity-based L7 policy is on the roadmap; the shift will replace the L3 layer, not stack on top of it.
 - **Kyverno is the last line of defense.** If a Kyverno policy would fail closed and break the cluster, that is a signal the policy is too broad — but it is not a reason to loosen the tenant contract.
+
+#### Ambient experiment — what we learned
+
+Both tenant namespaces were briefly labeled `istio.io/dataplane-mode=ambient` to enroll them in Istio ambient mesh. The experiment was reverted; ambient stays off until a Waypoint proxy pattern is in place.
+
+**Findings:**
+
+- Ambient enrollment works end-to-end. Istio CNI on the node picks up the label change, marks pods for interception, and ztunnel starts capturing their traffic.
+- Pod-to-pod traffic **inside** an ambient namespace continues to work — verified by `todo-db → todo-web` on port 8080.
+- Kubelet HTTP probes against ambient-enrolled pods **fail with connection timeouts**. Probes originate from the node's host network; ztunnel intercepts them but has no matching mTLS session, so packets are dropped.
+- This is not a probe-declaration bug. Container ports are named (`http`), probes reference the name, Postgres uses exec probes. The named-port + probe-exemption path that works in Istio sidecar mode does not apply here — ambient has no per-pod proxy to do the probe rewriting.
+
+**Why L7 identity is deferred:**
+
+1. Ambient alone is wire encryption, not access control. You still need `AuthorizationPolicy` to enforce "Team A cannot call Team B" — and today NetworkPolicy already covers that at L3.
+2. Making ambient work with kubelet probes requires deploying a **Waypoint proxy** per namespace (L7 gateway) or switching to exec-based probes. Both are non-trivial commitments.
+3. The concrete threat model — cross-tenant service calls that need identity-based authz — does not exist yet. Two tenants, no cross-tenant dependencies.
+
+**When to revisit:**
+
+- A tenant onboards that needs to call another tenant's service (requires identity-based `AuthorizationPolicy`).
+- Threat model expands to include on-cluster passive attackers (requires wire encryption).
+- Compliance requirement forces mTLS between all workloads.
+
+At that point the work is: deploy Waypoint proxies, re-enable ambient enrollment at onboarding, ship `AuthorizationPolicy` as part of the onboarding contract, and remove the NetworkPolicy layer once identity-based rules replace it.
 
 #### Admission-time contract (Kyverno)
 
@@ -117,10 +142,11 @@ spec:
 
 Access control at the AWS side is enforced by the `ClusterSecretStore`'s IAM role — its policy restricts `secretsmanager:GetSecretValue` to secrets under specific prefixes. A tenant cannot read another tenant's secrets even if they know the ARN.
 
-#### mTLS — consumption pattern
+#### mTLS — consumption pattern (deferred)
 
-Namespaces created by the onboarding flow are labeled `istio.io/dataplane-mode=ambient`. From that point:
+_Ambient is currently disabled; see "Ambient experiment" above. When re-enabled with Waypoint support:_
 
+- Namespaces will be labeled `istio.io/dataplane-mode=ambient` at onboarding, with a Waypoint proxy deployed for the namespace to handle kubelet probes and L7 policy.
 - All pod-to-pod traffic within the mesh is transparently encrypted by ztunnel — no sidecar, no code change.
 - Workload identity is expressed as a SPIFFE ID derived from the ServiceAccount.
 - Tenants that want L7 policy (e.g., "only ServiceAccount X can call this Service") declare `AuthorizationPolicy` in their namespace.
@@ -129,7 +155,7 @@ Namespaces created by the onboarding flow are labeled `istio.io/dataplane-mode=a
 
 When a tenant onboards, the platform performs the following in a single ArgoCD `ApplicationSet` reconciliation (target state — today parts are still manual):
 
-1. Create namespace `<team>` with labels `team=<team>`, `istio.io/dataplane-mode=ambient`.
+1. Create namespace `<team>` with label `team=<team>`. Ambient enrollment (`istio.io/dataplane-mode=ambient`) is deferred; see "Ambient experiment".
 2. Apply default-deny `NetworkPolicy` (ingress and egress).
 3. Apply baseline `ResourceQuota` and `LimitRange`.
 4. Create the tenant's `ServiceAccount`(s) and any Pod Identity associations declared in the onboarding request.
