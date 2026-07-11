@@ -8,7 +8,6 @@ storage
 network
 security
 
-observebility
 
 ---
 

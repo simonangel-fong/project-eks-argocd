@@ -4,11 +4,24 @@ metadata:
   name: team-b
   labels:
     team: team-b
-    # Ambient mTLS disabled — see docs/security.md "Ambient experiment".
-    # Enroll again once a Waypoint proxy is deployed for the namespace.
-    # istio.io/dataplane-mode: ambient
+    # Enroll the namespace in Istio ambient. ztunnel (istio-system DaemonSet)
+    # transparently encrypts pod traffic with mTLS — no sidecars, no pod restarts.
+    istio.io/dataplane-mode: ambient
+---
+# Enforce mTLS for all workloads in the namespace. Ambient encrypts by default;
+# STRICT rejects any plaintext peer that bypasses ztunnel.
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: team-b
+spec:
+  mtls:
+    mode: STRICT
 ---
 # Default-deny — every pod-to-pod path is blocked until an allow rule opens it.
+# NetworkPolicy is L3/L4 and complements ambient's mTLS: ambient handles identity
+# and encryption, NP handles reachability.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -20,6 +33,12 @@ spec:
 ---
 # Companion allow — restores inbound from the shared Gateway and outbound to
 # kube-dns. Without this, default-deny breaks tenant ingress on day one.
+# Ambient additions:
+#   - ingress from istio-system covers ztunnel/waypoint traffic
+#   - 169.254.7.127/32 is the link-local address ambient SNATs kubelet probes
+#     to; without this, HTTP probes on web/api time out (Postgres uses exec
+#     probes so it's unaffected)
+#   - TCP 15008 (HBONE) carries ambient pod-to-pod mTLS between namespaces
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -33,11 +52,19 @@ spec:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: istio-ingress
-    # Kubelet probes originate from the node's host IP, which has no
-    # namespace/pod selector. Allow the VPC CIDR so probes reach the pod.
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: istio-system
+    - from:
+        - ipBlock:
+            cidr: 169.254.7.127/32
     - from:
         - ipBlock:
             cidr: 10.0.0.0/16
+    - from:
+        - namespaceSelector: {}
+      ports:
+        - { protocol: TCP, port: 15008 }
   egress:
     - to:
         - namespaceSelector:
@@ -46,6 +73,10 @@ spec:
       ports:
         - { protocol: UDP, port: 53 }
         - { protocol: TCP, port: 53 }
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: istio-system
     - to:
         - podSelector: {}
 ---
