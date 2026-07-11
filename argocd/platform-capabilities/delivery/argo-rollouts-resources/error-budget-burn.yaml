@@ -1,49 +1,49 @@
-# Fast burn-rate check against a stated availability SLO.
-# Rolls back if 1h burn rate exceeds a canary-appropriate threshold.
-#
-# Simple SLO framing (no Sloth): if you set slo=99.5, error budget = 0.5%.
-# A 14.4x burn rate consumes 30d budget in ~50h — the standard "fast burn"
-# alert threshold. During a canary this is too tight; use 6x (200h) so
-# transient blips don't abort every rollout.
-#
-# Args:
-#   service    — canary service name
-#   namespace  — service namespace
-#   slo        — availability SLO (e.g. "99.5" for 99.5%)
-#   burnRate   — burn multiplier (default 6x)
-apiVersion: argoproj.io/v1alpha1
-kind: ClusterAnalysisTemplate
-metadata:
-  name: error-budget-burn
-spec:
-  args:
-    - name: service
-    - name: namespace
-    - name: slo
-      value: "99.5"
-    - name: burnRate
-      value: "6"
-  metrics:
-    - name: error-budget-burn
-      interval: 60s
-      count: 5
-      # burn = errorRate / errorBudget. errorBudget = (100-slo)/100.
-      # successCondition: burn stays under burnRate multiplier.
-      successCondition: result[0] < {{args.burnRate}}
-      failureLimit: 2
-      provider:
-        prometheus:
-          address: http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
-          query: |
-            (
-              sum(rate(istio_requests_total{
-                destination_service_name="{{args.service}}",
-                destination_service_namespace="{{args.namespace}}",
-                response_code=~"5.."
-              }[1h]))
-              /
-              sum(rate(istio_requests_total{
-                destination_service_name="{{args.service}}",
-                destination_service_namespace="{{args.namespace}}"
-              }[1h]))
-            ) / ((100 - {{args.slo}}) / 100)
+# # Fast burn-rate check against a stated availability SLO.
+# # Rolls back if 1h burn rate exceeds a canary-appropriate threshold.
+# #
+# # Simple SLO framing (no Sloth): if you set slo=99.5, error budget = 0.5%.
+# # A 14.4x burn rate consumes 30d budget in ~50h — the standard "fast burn"
+# # alert threshold. During a canary this is too tight; use 6x (200h) so
+# # transient blips don't abort every rollout.
+# #
+# # Args:
+# #   service    — canary service name
+# #   namespace  — service namespace
+# #   slo        — availability SLO (e.g. "99.5" for 99.5%)
+# #   burnRate   — burn multiplier (default 6x)
+# apiVersion: argoproj.io/v1alpha1
+# kind: ClusterAnalysisTemplate
+# metadata:
+#   name: error-budget-burn
+# spec:
+#   args:
+#     - name: service
+#     - name: namespace
+#     - name: slo
+#       value: "99.5"
+#     - name: burnRate
+#       value: "6"
+#   metrics:
+#     - name: error-budget-burn
+#       interval: 60s
+#       count: 5
+#       # burn = errorRate / errorBudget. errorBudget = (100-slo)/100.
+#       # successCondition: burn stays under burnRate multiplier.
+#       successCondition: result[0] < {{args.burnRate}}
+#       failureLimit: 2
+#       provider:
+#         prometheus:
+#           address: http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
+#           query: |
+#             (
+#               sum(rate(istio_requests_total{
+#                 destination_service_name="{{args.service}}",
+#                 destination_service_namespace="{{args.namespace}}",
+#                 response_code=~"5.."
+#               }[1h]))
+#               /
+#               sum(rate(istio_requests_total{
+#                 destination_service_name="{{args.service}}",
+#                 destination_service_namespace="{{args.namespace}}"
+#               }[1h]))
+#             ) / ((100 - {{args.slo}}) / 100)

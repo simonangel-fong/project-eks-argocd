@@ -1,37 +1,37 @@
-# p95 request duration in milliseconds. Rolls back if slower than threshold.
-#
-# Args:
-#   service    — canary service name
-#   namespace  — service namespace
-#   threshold  — max p95 latency in milliseconds
-#   interval   — evaluation cadence
-apiVersion: argoproj.io/v1alpha1
-kind: ClusterAnalysisTemplate
-metadata:
-  name: latency-p95
-spec:
-  args:
-    - name: service
-    - name: namespace
-    - name: threshold
-      value: "500"
-    - name: interval
-      value: "30s"
-  metrics:
-    - name: latency-p95
-      interval: "{{args.interval}}"
-      count: 5
-      successCondition: result[0] <= {{args.threshold}}
-      failureLimit: 2
-      provider:
-        prometheus:
-          address: http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
-          query: |
-            histogram_quantile(0.95,
-              sum by (le) (
-                rate(istio_request_duration_milliseconds_bucket{
-                  destination_service_name="{{args.service}}",
-                  destination_service_namespace="{{args.namespace}}"
-                }[2m])
-              )
-            )
+# # p95 request duration in milliseconds. Rolls back if slower than threshold.
+# #
+# # Args:
+# #   service    — canary service name
+# #   namespace  — service namespace
+# #   threshold  — max p95 latency in milliseconds
+# #   interval   — evaluation cadence
+# apiVersion: argoproj.io/v1alpha1
+# kind: ClusterAnalysisTemplate
+# metadata:
+#   name: latency-p95
+# spec:
+#   args:
+#     - name: service
+#     - name: namespace
+#     - name: threshold
+#       value: "500"
+#     - name: interval
+#       value: "30s"
+#   metrics:
+#     - name: latency-p95
+#       interval: "{{args.interval}}"
+#       count: 5
+#       successCondition: result[0] <= {{args.threshold}}
+#       failureLimit: 2
+#       provider:
+#         prometheus:
+#           address: http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
+#           query: |
+#             histogram_quantile(0.95,
+#               sum by (le) (
+#                 rate(istio_request_duration_milliseconds_bucket{
+#                   destination_service_name="{{args.service}}",
+#                   destination_service_namespace="{{args.namespace}}"
+#                 }[2m])
+#               )
+#             )
