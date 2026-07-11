@@ -1,12 +1,13 @@
 # Multi-tenant Platform Runbook - Networking Capability
 
-[Back](../README.md)
+[Back](../../README.md)
 
-- [Overview](#overview)
-- [Responsibility Model](#responsibility-model)
-- [Tenant Consumption Pattern](#tenant-consumption-pattern)
-- [Common Issues and Commands](#common-issues-and-commands)
-- [Values that must match Terraform](#values-that-must-match-terraform)
+- [Multi-tenant Platform Runbook - Networking Capability](#multi-tenant-platform-runbook---networking-capability)
+  - [Overview](#overview)
+  - [Responsibility Model](#responsibility-model)
+  - [Tenant Consumption Pattern](#tenant-consumption-pattern)
+  - [Common Issues and Commands](#common-issues-and-commands)
+  - [Values that must match Terraform](#values-that-must-match-terraform)
 
 ---
 

@@ -1,6 +1,6 @@
 # Multi-tenant Platform Runbook - Storage Capability
 
-[Back](../README.md)
+[Back](../../README.md)
 
 - [Multi-tenant Platform Runbook - Storage Capability](#multi-tenant-platform-runbook---storage-capability)
   - [Overview](#overview)
@@ -29,22 +29,22 @@ The platform ships out-of-the-box block storage via the **AWS EBS CSI driver**. 
 
 ## Responsibility Model
 
-| Concern                        | Platform | Tenant | Notes                                                                          |
-| ------------------------------ | :------: | :----: | ------------------------------------------------------------------------------ |
-| CSI driver lifecycle           |    ✅    |        | `aws-ebs-csi-driver` installed as an EKS-managed add-on with Pod Identity.     |
-| StorageClass definitions       |    ✅    |        | `gp3` (default) and `gp3-iops`, GitOps-managed under `argocd/platform/storage/`. |
-| PVC creation, sizing, mounting |          |   ✅   | Tenants declare PVCs with a `storageClassName` and access mode.                |
-| Volume expansion               |          |   ✅   | Enabled at the StorageClass level; tenants patch PVC `spec.resources.requests.storage`. |
+| Concern                        | Platform | Tenant | Notes                                                                                              |
+| ------------------------------ | :------: | :----: | -------------------------------------------------------------------------------------------------- |
+| CSI driver lifecycle           |    ✅    |        | `aws-ebs-csi-driver` installed as an EKS-managed add-on with Pod Identity.                         |
+| StorageClass definitions       |    ✅    |        | `gp3` (default) and `gp3-iops`, GitOps-managed under `argocd/platform/storage/`.                   |
+| PVC creation, sizing, mounting |          |   ✅   | Tenants declare PVCs with a `storageClassName` and access mode.                                    |
+| Volume expansion               |          |   ✅   | Enabled at the StorageClass level; tenants patch PVC `spec.resources.requests.storage`.            |
 | Backup / snapshot policy       |          |   ✅   | Tenants own their `VolumeSnapshot` schedule; platform ships the CSI snapshotter only if requested. |
 
 ---
 
 ## Block Storage — StorageClass Matrix
 
-| Class             | Provisioner       | Type | IOPS / Throughput       | Reclaim  | Binding                | Expansion | Use                                                                                               |
-| ----------------- | ----------------- | ---- | ----------------------- | -------- | ---------------------- | :-------: | ------------------------------------------------------------------------------------------------- |
-| `gp3` _(default)_ | `ebs.csi.aws.com` | gp3  | AWS defaults (3000 / 125 MiB/s) | `Delete` | `WaitForFirstConsumer` | ✅ | Stateless caches, scratch space, general-purpose stateful workloads.                          |
-| `gp3-iops`        | `ebs.csi.aws.com` | gp3  | 10 000 IOPS / 500 MiB/s | `Retain` | `WaitForFirstConsumer` | ✅ | Databases, WALs, write-heavy stateful workloads. `Retain` protects data on accidental PVC delete. |
+| Class             | Provisioner       | Type | IOPS / Throughput               | Reclaim  | Binding                | Expansion | Use                                                                                               |
+| ----------------- | ----------------- | ---- | ------------------------------- | -------- | ---------------------- | :-------: | ------------------------------------------------------------------------------------------------- |
+| `gp3` _(default)_ | `ebs.csi.aws.com` | gp3  | AWS defaults (3000 / 125 MiB/s) | `Delete` | `WaitForFirstConsumer` |    ✅     | Stateless caches, scratch space, general-purpose stateful workloads.                              |
+| `gp3-iops`        | `ebs.csi.aws.com` | gp3  | 10 000 IOPS / 500 MiB/s         | `Retain` | `WaitForFirstConsumer` |    ✅     | Databases, WALs, write-heavy stateful workloads. `Retain` protects data on accidental PVC delete. |
 
 **Notes:**
 
@@ -122,11 +122,11 @@ aws ec2 delete-volume --volume-id <vol-id>
 
 **Common issues**
 
-| Symptom                                          | Likely cause                                                                             | Fix                                                                                          |
-| ------------------------------------------------ | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| PVC stays `Pending`                              | `WaitForFirstConsumer` — no pod yet consumes it                                          | Schedule a pod referencing the PVC; check `kubectl describe pvc` if it stays pending after.  |
-| PVC `Pending` with `failed to provision volume`  | CSI controller lacks EBS permissions (Pod Identity broken) or wrong `storageClassName`   | Check controller logs and the `ebs-csi-controller-sa` Pod Identity association.              |
-| Pod stuck `ContainerCreating` with `AttachVolume.Attach failed` | Volume in a different AZ than the node (rare with `WaitForFirstConsumer` — usually pre-existing PV) | Delete and recreate the PVC, or move the pod to the volume's AZ.                             |
-| `Volume node affinity conflict`                  | Pod rescheduled to another AZ; EBS volume is AZ-scoped                                   | Add `topology.kubernetes.io/zone` node affinity, or use a StatefulSet with stable scheduling. |
-| PVC deleted but EBS volume remains + billed      | StorageClass `reclaimPolicy: Retain` (expected for `gp3-iops`)                           | Manually delete the PV, then `aws ec2 delete-volume`.                                        |
-| Volume expansion doesn't take effect             | Filesystem not resized inside the pod                                                    | Restart the pod; the CSI node plugin resizes the FS on remount.                              |
+| Symptom                                                         | Likely cause                                                                                        | Fix                                                                                           |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| PVC stays `Pending`                                             | `WaitForFirstConsumer` — no pod yet consumes it                                                     | Schedule a pod referencing the PVC; check `kubectl describe pvc` if it stays pending after.   |
+| PVC `Pending` with `failed to provision volume`                 | CSI controller lacks EBS permissions (Pod Identity broken) or wrong `storageClassName`              | Check controller logs and the `ebs-csi-controller-sa` Pod Identity association.               |
+| Pod stuck `ContainerCreating` with `AttachVolume.Attach failed` | Volume in a different AZ than the node (rare with `WaitForFirstConsumer` — usually pre-existing PV) | Delete and recreate the PVC, or move the pod to the volume's AZ.                              |
+| `Volume node affinity conflict`                                 | Pod rescheduled to another AZ; EBS volume is AZ-scoped                                              | Add `topology.kubernetes.io/zone` node affinity, or use a StatefulSet with stable scheduling. |
+| PVC deleted but EBS volume remains + billed                     | StorageClass `reclaimPolicy: Retain` (expected for `gp3-iops`)                                      | Manually delete the PV, then `aws ec2 delete-volume`.                                         |
+| Volume expansion doesn't take effect                            | Filesystem not resized inside the pod                                                               | Restart the pod; the CSI node plugin resizes the FS on remount.                               |

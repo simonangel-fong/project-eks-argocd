@@ -1,6 +1,6 @@
 # Multi-tenant Platform Runbook - Compute Capability
 
-[Back](../README.md)
+[Back](../../README.md)
 
 - [Multi-tenant Platform Runbook - Compute Capability](#multi-tenant-platform-runbook---compute-capability)
   - [Overview](#overview)
@@ -9,6 +9,7 @@
   - [Responsibility Model](#responsibility-model)
   - [Tenant Consumption Pattern](#tenant-consumption-pattern)
   - [Common Issues and Commands](#common-issues-and-commands)
+    - [Values that must match Terraform](#values-that-must-match-terraform)
 
 ---
 

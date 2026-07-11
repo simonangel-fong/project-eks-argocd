@@ -1,12 +1,13 @@
 # Multi-tenant Platform Guide - Network
 
-[Back](../README.md)
+[Back](../../README.md)
 
-- [Overview](#overview)
-- [What Tenants Get for Free](#what-tenants-get-for-free)
-- [How to Expose a Service](#how-to-expose-a-service)
-- [Example](#example)
-- [Rules of the Road](#rules-of-the-road)
+- [Multi-tenant Platform Guide - Network](#multi-tenant-platform-guide---network)
+  - [Overview](#overview)
+  - [What Tenants Get for Free](#what-tenants-get-for-free)
+  - [How to Expose a Service](#how-to-expose-a-service)
+  - [Example](#example)
+  - [Rules of the Road](#rules-of-the-road)
 
 ---
 

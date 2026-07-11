@@ -1,6 +1,6 @@
 # Multi-tenant Platform Runbook - Monitoring Capability
 
-[Back](../README.md)
+[Back](../../README.md)
 
 - [Multi-tenant Platform Runbook - Monitoring Capability](#multi-tenant-platform-runbook---monitoring-capability)
   - [Monitoring Capability(under deployment)](#monitoring-capabilityunder-deployment)

@@ -1,13 +1,14 @@
 # Multi-tenant Platform Runbook - Tenant Onboarding
 
-[Back](../README.md)
+[Back](../../README.md)
 
-- [Overview](#overview)
-- [Intake](#intake)
-- [Onboarding Steps](#onboarding-steps)
-- [Tenant Bootstrap Manifest](#tenant-bootstrap-manifest)
-- [Verification](#verification)
-- [Common Issues](#common-issues)
+- [Multi-tenant Platform Runbook - Tenant Onboarding](#multi-tenant-platform-runbook---tenant-onboarding)
+  - [Overview](#overview)
+  - [Intake](#intake)
+  - [Onboarding Steps](#onboarding-steps)
+  - [Tenant Bootstrap Manifest](#tenant-bootstrap-manifest)
+  - [Verification](#verification)
+  - [Common Issues](#common-issues)
 
 ---
 
@@ -27,14 +28,14 @@ Everything after is self-service via the tenant's repo. Reference: [argocd/proje
 
 Collect from the tenant before opening the PR:
 
-| Field                | Example                                                    | Used for                                       |
-| -------------------- | ---------------------------------------------------------- | ---------------------------------------------- |
-| Team name (`<team>`) | `team-a`                                                   | namespace, subdomain, `team` label             |
-| Source repo          | `https://github.com/simonangel-fong/project-eks-argocd`    | `AppProject.sourceRepos`                       |
-| Manifests path       | `demo-app/team-a`                                          | `Application.spec.source.path`                 |
-| Cluster-scoped needs | e.g. `HTTPRoute` (Gateway API)                             | `AppProject.clusterResourceWhitelist`          |
-| Quota tier           | baseline / custom                                          | `ResourceQuota` values                         |
-| AWS access?          | which secrets / S3 buckets                                 | Pod Identity role provisioning                 |
+| Field                | Example                                                 | Used for                              |
+| -------------------- | ------------------------------------------------------- | ------------------------------------- |
+| Team name (`<team>`) | `team-a`                                                | namespace, subdomain, `team` label    |
+| Source repo          | `https://github.com/simonangel-fong/project-eks-argocd` | `AppProject.sourceRepos`              |
+| Manifests path       | `demo-app/team-a`                                       | `Application.spec.source.path`        |
+| Cluster-scoped needs | e.g. `HTTPRoute` (Gateway API)                          | `AppProject.clusterResourceWhitelist` |
+| Quota tier           | baseline / custom                                       | `ResourceQuota` values                |
+| AWS access?          | which secrets / S3 buckets                              | Pod Identity role provisioning        |
 
 ---
 
@@ -65,7 +66,7 @@ metadata:
   name: <team>
   labels:
     team: <team>
-    istio.io/dataplane-mode: ambient      # ztunnel takes over; no sidecars
+    istio.io/dataplane-mode: ambient # ztunnel takes over; no sidecars
 ```
 
 **2. `PeerAuthentication` — refuse plaintext peers**
@@ -82,30 +83,30 @@ spec:
 
 Ships as two policies: a blanket `default-deny` and a companion `allow-platform-ingress-and-dns` that restores the paths the platform needs. **Every rule matters** — omitting one breaks day-one traffic:
 
-| Rule                                 | Why                                                                    |
-| ------------------------------------ | ---------------------------------------------------------------------- |
-| Ingress from `istio-ingress` ns      | Shared Gateway → tenant pods                                           |
-| Ingress from `istio-system` ns       | ztunnel / waypoint HBONE                                               |
-| Ingress from `169.254.7.127/32`      | **Ambient SNATs kubelet probes to this link-local** — without this, all probes time out |
-| Ingress from `10.0.0.0/16`           | Non-ambient probe path (fallback if a pod exits ambient)               |
-| Ingress on TCP 15008 from any ns     | HBONE — east-west ambient mTLS tunnel                                  |
-| Egress UDP/TCP 53 → `kube-system`    | DNS                                                                    |
-| Egress to `istio-system`             | ztunnel xDS + upstream to waypoints                                    |
-| Egress to any pod in the namespace   | Internal traffic                                                       |
+| Rule                               | Why                                                                                     |
+| ---------------------------------- | --------------------------------------------------------------------------------------- |
+| Ingress from `istio-ingress` ns    | Shared Gateway → tenant pods                                                            |
+| Ingress from `istio-system` ns     | ztunnel / waypoint HBONE                                                                |
+| Ingress from `169.254.7.127/32`    | **Ambient SNATs kubelet probes to this link-local** — without this, all probes time out |
+| Ingress from `10.0.0.0/16`         | Non-ambient probe path (fallback if a pod exits ambient)                                |
+| Ingress on TCP 15008 from any ns   | HBONE — east-west ambient mTLS tunnel                                                   |
+| Egress UDP/TCP 53 → `kube-system`  | DNS                                                                                     |
+| Egress to `istio-system`           | ztunnel xDS + upstream to waypoints                                                     |
+| Egress to any pod in the namespace | Internal traffic                                                                        |
 
 **4. Baseline `ResourceQuota` + `LimitRange`**
 
 Defaults from [team-a.yaml](../../argocd/tenants/team-a.yaml):
 
-| Field                       | Value  |
-| --------------------------- | ------ |
-| `requests.cpu`              | `4`    |
-| `requests.memory`           | `8Gi`  |
-| `limits.cpu`                | `8`    |
-| `limits.memory`             | `16Gi` |
-| `persistentvolumeclaims`    | `10`   |
-| Container default request   | `100m` / `128Mi` |
-| Container default limit     | `500m` / `512Mi` |
+| Field                     | Value            |
+| ------------------------- | ---------------- |
+| `requests.cpu`            | `4`              |
+| `requests.memory`         | `8Gi`            |
+| `limits.cpu`              | `8`              |
+| `limits.memory`           | `16Gi`           |
+| `persistentvolumeclaims`  | `10`             |
+| Container default request | `100m` / `128Mi` |
+| Container default limit   | `500m` / `512Mi` |
 
 **5. ArgoCD `Application`**
 
@@ -155,11 +156,11 @@ curl -I https://<team>.arguswatcher.net                # expect 200/301, valid T
 
 ## Common Issues
 
-| Symptom                                                        | Likely cause                                                                     | Fix                                                                                     |
-| -------------------------------------------------------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| Tenant `Application` stuck `Unknown`                           | `AppProject` `sourceRepos` or `destinations` don't match the Application         | Align repo URL and namespace between `AppProject` and `Application`.                    |
-| Kyverno rejects tenant workloads (`require-team-label`, etc.)  | Manifests missing `team` label, requests, probes, or use `:latest`               | Point the tenant at the Kyverno policy list ([06-security.md](06-security.md#kyverno-policy-set)). |
-| All pods time out on probes right after onboarding             | NetworkPolicy missing the `169.254.7.127/32` ambient-SNAT rule                   | Re-apply `allow-platform-ingress-and-dns` from the reference manifest.                  |
-| East-west traffic silently dropped between two ambient namespaces | HBONE (TCP 15008) not allowed in tenant NetworkPolicy                          | Add the `port: 15008` ingress rule.                                                     |
-| Tenant hits quota on first deploy                              | Baseline quota too tight for the workload                                        | Bump `ResourceQuota` in the tenant file after capacity review.                          |
-| `HTTPRoute` rejected by Kyverno (`httproute-hostname-scoped-to-team`) | Hostname not under `<team>.arguswatcher.net`                             | Tenant must use their subdomain, or platform adds a custom listener + cert.             |
+| Symptom                                                               | Likely cause                                                             | Fix                                                                                                |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| Tenant `Application` stuck `Unknown`                                  | `AppProject` `sourceRepos` or `destinations` don't match the Application | Align repo URL and namespace between `AppProject` and `Application`.                               |
+| Kyverno rejects tenant workloads (`require-team-label`, etc.)         | Manifests missing `team` label, requests, probes, or use `:latest`       | Point the tenant at the Kyverno policy list ([06-security.md](06-security.md#kyverno-policy-set)). |
+| All pods time out on probes right after onboarding                    | NetworkPolicy missing the `169.254.7.127/32` ambient-SNAT rule           | Re-apply `allow-platform-ingress-and-dns` from the reference manifest.                             |
+| East-west traffic silently dropped between two ambient namespaces     | HBONE (TCP 15008) not allowed in tenant NetworkPolicy                    | Add the `port: 15008` ingress rule.                                                                |
+| Tenant hits quota on first deploy                                     | Baseline quota too tight for the workload                                | Bump `ResourceQuota` in the tenant file after capacity review.                                     |
+| `HTTPRoute` rejected by Kyverno (`httproute-hostname-scoped-to-team`) | Hostname not under `<team>.arguswatcher.net`                             | Tenant must use their subdomain, or platform adds a custom listener + cert.                        |

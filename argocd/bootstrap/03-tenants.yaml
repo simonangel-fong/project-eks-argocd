@@ -16,8 +16,8 @@ spec:
     repoURL: https://github.com/simonangel-fong/project-eks-argocd
     targetRevision: master
     path: argocd/tenants
-    directory:
-      recurse: false
+    # directory:
+    #   recurse: false
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd

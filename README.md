@@ -1,12 +1,10 @@
 # Multi-tenant Cluster
+description
 
-project name: multi-tenatn cluster
-eks name: multi-tenant
+tech stack
 
-compute
-storage
-network
-security
+challenge
+
 
 
 ---

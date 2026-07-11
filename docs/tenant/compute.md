@@ -1,6 +1,6 @@
 # Multi-tenant Platform Guide - Compute
 
-[Back](../README.md)
+[Back](../../README.md)
 
 - [Multi-tenant Platform Guide - Compute](#multi-tenant-platform-guide---compute)
   - [Overview](#overview)
