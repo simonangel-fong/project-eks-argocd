@@ -4,6 +4,71 @@ metadata:
   name: team-b
   labels:
     team: team-b
+    istio.io/dataplane-mode: ambient
+---
+# Default-deny — every pod-to-pod path is blocked until an allow rule opens it.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: team-b
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+---
+# Companion allow — restores inbound from the shared Gateway and outbound to
+# kube-dns. Without this, default-deny breaks tenant ingress on day one.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-platform-ingress-and-dns
+  namespace: team-b
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: istio-ingress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - { protocol: UDP, port: 53 }
+        - { protocol: TCP, port: 53 }
+    - to:
+        - podSelector: {}
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: baseline
+  namespace: team-b
+spec:
+  hard:
+    requests.cpu: "8"
+    requests.memory: 16Gi
+    limits.cpu: "16"
+    limits.memory: 32Gi
+    persistentvolumeclaims: "10"
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: baseline
+  namespace: team-b
+spec:
+  limits:
+    - type: Container
+      default:
+        cpu: 500m
+        memory: 512Mi
+      defaultRequest:
+        cpu: 100m
+        memory: 128Mi
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
