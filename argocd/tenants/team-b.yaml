@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: team-b
+  labels:
+    team: team-b
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: team-b
+  namespace: argocd
+  finalizers:
+    - argocd.argoproj.io/resources-finalizer
+spec:
+  project: team-b
+  source:
+    repoURL: https://github.com/simonangel-fong/project-eks-argocd
+    targetRevision: master
+    path: demo-app/team-b
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: team-b
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
