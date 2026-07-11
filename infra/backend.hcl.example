@@ -1,5 +1,5 @@
 bucket       = "REPLACE-ME-tfstate-bucket"
-key          = "voting/dev/aws.tfstate"
+key          = "multi-tenant-eks/dev/terraform.tfstate"
 region       = "ca-central-1"
 encrypt      = true
 use_lockfile = true

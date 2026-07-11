@@ -106,8 +106,19 @@ Manifests: [demo-app/team-b/](demo-app/team-b/)
 - [Security](docs/platform/security.md)
 - [Tenant onboarding](docs/platform/onboarding.md)
 
-**Tenant guides** (`docs/tenant/`): how a team lands an application on the platform.
+**Tenant guides**: how a team lands an application on the platform.
 
 - [Onboarding](docs/tenant/onboarding.md)
 - [Compute](docs/tenant/compute.md)
 - [Network](docs/tenant/network.md)
+
+---
+
+## Roadmap
+
+| Stage         | Scope                                                                                         | Status         |
+| ------------- | --------------------------------------------------------------------------------------------- | -------------- |
+| Foundation    | Compute, storage, networking, and security capabilities                                       | ✅ Done        |
+| Observability | Multi-tenant monitoring, logging, and tracing on the LGTM stack (Loki, Grafana, Tempo, Mimir) | 🚧 In progress |
+| Delivery      | Progressive rollouts and canary analysis via Argo Rollouts                                    | 🚧 In progress |
+| Advanced      | GPU workloads and AI agent applications                                                       | 📋 Planned     |

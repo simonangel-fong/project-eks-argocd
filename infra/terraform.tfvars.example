@@ -1,6 +1,3 @@
 cluster_public_access_cidrs = ["IP_ad"]
-
-# Phase 7.11 — TLS / DNS
-domain_name          = "arguswatcher.net"
-subdomain            = "voting"
-cloudflare_api_token = "REPLACE_ME"
+cloudflare_api_token        = "<api_token>"
+slack_webhook_url           = "<slack_webhook_url>"
