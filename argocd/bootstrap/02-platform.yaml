@@ -15,7 +15,7 @@ spec:
   source:
     repoURL: https://github.com/simonangel-fong/project-eks-argocd
     targetRevision: master
-    path: argocd/platform-capabilities
+    path: argocd/platform
     directory:
       recurse: true
       exclude: '*/*/*.yaml'
