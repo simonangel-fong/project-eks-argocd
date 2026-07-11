@@ -1,135 +1,140 @@
-# apiVersion: argoproj.io/v1alpha1
-# kind: Application
-# metadata:
-#   name: platform-argo-rollouts
-#   namespace: argocd
-#   labels:
-#     scope: platform
-#     capability: delivery
-#   annotations:
-#     argocd.argoproj.io/sync-wave: "-11"
-#   finalizers:
-#     - argocd.argoproj.io/resources-finalizer
-# spec:
-#   project: platform
-#   source:
-#     repoURL: https://argoproj.github.io/argo-helm
-#     chart: argo-rollouts
-#     targetRevision: 2.41.0
-#     helm:
-#       releaseName: argo-rollouts
-#       values: |
-#         # Gateway API traffic-routing plugin — shifts traffic by mutating
-#         # HTTPRoute weights. Required for canary on our Istio ambient stack.
-#         controller:
-#           replicas: 2
-#           resources:
-#             requests:
-#               cpu: 100m
-#               memory: 128Mi
-#             limits:
-#               memory: 256Mi
-#           extraArgs:
-#             - --leader-elect
-#           metrics:
-#             enabled: true
-#             serviceMonitor:
-#               enabled: true
-#               additionalLabels:
-#                 release: prometheus
-#         # Notifications engine — same Slack app as ArgoCD and Alertmanager.
-#         # Templates parameterize by rollout labels; team-specific routing
-#         # via `slack:{{.rollout.metadata.labels.team}}-deploys`.
-#         notifications:
-#           enabled: true
-#           secret:
-#             create: false
-#             name: argo-rollouts-notification-secret
-#           notifiers:
-#             service.slack: |
-#               token: $slack-token
-#           templates:
-#             template.rollout-started: |
-#               message: |
-#                 :rocket: *Rollout started* — `{{.rollout.metadata.namespace}}/{{.rollout.metadata.name}}`
-#                 Team: `{{.rollout.metadata.labels.team}}`
-#                 Strategy: `{{if .rollout.spec.strategy.canary}}canary{{else if .rollout.spec.strategy.blueGreen}}blueGreen{{else}}unknown{{end}}`
-#                 Revision: `{{.rollout.status.currentPodHash}}`
-#             template.rollout-step-completed: |
-#               message: |
-#                 :arrow_forward: *Step completed* — `{{.rollout.metadata.namespace}}/{{.rollout.metadata.name}}`
-#                 Team: `{{.rollout.metadata.labels.team}}`
-#                 Step: `{{.rollout.status.currentStepIndex}}`
-#             template.rollout-paused: |
-#               message: |
-#                 :pause_button: *Rollout paused* — `{{.rollout.metadata.namespace}}/{{.rollout.metadata.name}}`
-#                 Team: `{{.rollout.metadata.labels.team}}`
-#                 Reason: awaiting analysis or manual promotion
-#             template.rollout-aborted: |
-#               message: |
-#                 :rotating_light: *Rollout aborted* — `{{.rollout.metadata.namespace}}/{{.rollout.metadata.name}}`
-#                 Team: `{{.rollout.metadata.labels.team}}`
-#                 Traffic reverted to stable version.
-#             template.rollout-completed: |
-#               message: |
-#                 :white_check_mark: *Rollout completed* — `{{.rollout.metadata.namespace}}/{{.rollout.metadata.name}}`
-#                 Team: `{{.rollout.metadata.labels.team}}`
-#           triggers:
-#             trigger.on-rollout-started: |
-#               - when: rollout.status.phase == 'Progressing' and rollout.status.currentStepIndex == 0
-#                 send: [rollout-started]
-#             trigger.on-rollout-step-completed: |
-#               - when: rollout.status.currentStepIndex > 0 and rollout.status.phase == 'Progressing'
-#                 send: [rollout-step-completed]
-#             trigger.on-rollout-paused: |
-#               - when: rollout.status.phase == 'Paused'
-#                 send: [rollout-paused]
-#             trigger.on-rollout-aborted: |
-#               - when: rollout.status.phase == 'Degraded' or rollout.status.abort
-#                 send: [rollout-aborted]
-#             trigger.on-rollout-completed: |
-#               - when: rollout.status.phase == 'Healthy'
-#                 send: [rollout-completed]
-#           subscriptions:
-#             - recipients:
-#                 - slack:platform-events
-#               triggers:
-#                 - on-rollout-started
-#                 - on-rollout-paused
-#                 - on-rollout-aborted
-#                 - on-rollout-completed
-#         # Enable the Gateway API traffic-routing plugin. Argo Rollouts
-#         # discovers it via the ConfigMap below.
-#         controllerConfigMap:
-#           create: true
-#           name: argo-rollouts-config
-#           data:
-#             trafficRouterPlugins: |-
-#               - name: "argoproj-labs/gatewayAPI"
-#                 location: "https://github.com/argoproj-labs/rollouts-plugin-trafficrouter-gatewayapi/releases/download/v0.5.0/gatewayapi-plugin-linux-amd64"
-#         # Dashboard bundled with the chart — optional; also accessible via
-#         # the ArgoCD Rollouts extension.
-#         dashboard:
-#           enabled: false
-#   destination:
-#     server: https://kubernetes.default.svc
-#     namespace: argo-rollouts
-#   ignoreDifferences:
-#     - group: apiextensions.k8s.io
-#       kind: CustomResourceDefinition
-#       jqPathExpressions:
-#         - .metadata.annotations
-#         - .metadata.labels
-#         - .spec.conversion
-#     - group: admissionregistration.k8s.io
-#       kind: ValidatingWebhookConfiguration
-#       jqPathExpressions:
-#         - .webhooks[].failurePolicy
-#   syncPolicy:
-#     automated:
-#       prune: true
-#       selfHeal: true
-#     syncOptions:
-#       - CreateNamespace=true
-#       - ServerSideApply=true
-#       - RespectIgnoreDifferences=true
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: platform-argo-rollouts
+  namespace: argocd
+  labels:
+    scope: platform
+    capability: delivery
+  annotations:
+    argocd.argoproj.io/sync-wave: "-11"
+  finalizers:
+    - argocd.argoproj.io/resources-finalizer
+spec:
+  project: platform
+  source:
+    repoURL: https://argoproj.github.io/argo-helm
+    chart: argo-rollouts
+    targetRevision: 2.41.0
+    helm:
+      releaseName: argo-rollouts
+      values: |
+        # Gateway API traffic-routing plugin — shifts traffic by mutating
+        # HTTPRoute weights. Required for canary on our Istio ambient stack.
+        controller:
+          replicas: 2
+          tolerations:
+            - key: workload-class
+              operator: Equal
+              value: platform
+              effect: NoSchedule
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              memory: 256Mi
+          extraArgs:
+            - --leader-elect
+          metrics:
+            enabled: true
+            serviceMonitor:
+              enabled: true
+              additionalLabels:
+                release: prometheus
+        # Notifications engine — same Slack app as ArgoCD and Alertmanager.
+        # Templates parameterize by rollout labels; team-specific routing
+        # via `slack:{{.rollout.metadata.labels.team}}-deploys`.
+        notifications:
+          enabled: true
+          secret:
+            create: false
+            name: argo-rollouts-notification-secret
+          notifiers:
+            service.slack: |
+              token: $slack-token
+          templates:
+            template.rollout-started: |
+              message: |
+                :rocket: *Rollout started* — `{{.rollout.metadata.namespace}}/{{.rollout.metadata.name}}`
+                Team: `{{.rollout.metadata.labels.team}}`
+                Strategy: `{{if .rollout.spec.strategy.canary}}canary{{else if .rollout.spec.strategy.blueGreen}}blueGreen{{else}}unknown{{end}}`
+                Revision: `{{.rollout.status.currentPodHash}}`
+            template.rollout-step-completed: |
+              message: |
+                :arrow_forward: *Step completed* — `{{.rollout.metadata.namespace}}/{{.rollout.metadata.name}}`
+                Team: `{{.rollout.metadata.labels.team}}`
+                Step: `{{.rollout.status.currentStepIndex}}`
+            template.rollout-paused: |
+              message: |
+                :pause_button: *Rollout paused* — `{{.rollout.metadata.namespace}}/{{.rollout.metadata.name}}`
+                Team: `{{.rollout.metadata.labels.team}}`
+                Reason: awaiting analysis or manual promotion
+            template.rollout-aborted: |
+              message: |
+                :rotating_light: *Rollout aborted* — `{{.rollout.metadata.namespace}}/{{.rollout.metadata.name}}`
+                Team: `{{.rollout.metadata.labels.team}}`
+                Traffic reverted to stable version.
+            template.rollout-completed: |
+              message: |
+                :white_check_mark: *Rollout completed* — `{{.rollout.metadata.namespace}}/{{.rollout.metadata.name}}`
+                Team: `{{.rollout.metadata.labels.team}}`
+          triggers:
+            trigger.on-rollout-started: |
+              - when: rollout.status.phase == 'Progressing' and rollout.status.currentStepIndex == 0
+                send: [rollout-started]
+            trigger.on-rollout-step-completed: |
+              - when: rollout.status.currentStepIndex > 0 and rollout.status.phase == 'Progressing'
+                send: [rollout-step-completed]
+            trigger.on-rollout-paused: |
+              - when: rollout.status.phase == 'Paused'
+                send: [rollout-paused]
+            trigger.on-rollout-aborted: |
+              - when: rollout.status.phase == 'Degraded' or rollout.status.abort
+                send: [rollout-aborted]
+            trigger.on-rollout-completed: |
+              - when: rollout.status.phase == 'Healthy'
+                send: [rollout-completed]
+          subscriptions:
+            - recipients:
+                - slack:platform-events
+              triggers:
+                - on-rollout-started
+                - on-rollout-paused
+                - on-rollout-aborted
+                - on-rollout-completed
+        # Enable the Gateway API traffic-routing plugin. Argo Rollouts
+        # discovers it via the ConfigMap below.
+        controllerConfigMap:
+          create: true
+          name: argo-rollouts-config
+          data:
+            trafficRouterPlugins: |-
+              - name: "argoproj-labs/gatewayAPI"
+                location: "https://github.com/argoproj-labs/rollouts-plugin-trafficrouter-gatewayapi/releases/download/v0.5.0/gatewayapi-plugin-linux-amd64"
+        # Dashboard bundled with the chart — optional; also accessible via
+        # the ArgoCD Rollouts extension.
+        dashboard:
+          enabled: false
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argo-rollouts
+  ignoreDifferences:
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+      jqPathExpressions:
+        - .metadata.annotations
+        - .metadata.labels
+        - .spec.conversion
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+      jqPathExpressions:
+        - .webhooks[].failurePolicy
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - RespectIgnoreDifferences=true
