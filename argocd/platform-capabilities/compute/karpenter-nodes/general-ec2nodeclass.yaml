@@ -13,6 +13,13 @@ spec:
   securityGroupSelectorTerms:
     - tags:
         karpenter.sh/discovery: multi-tenant-eks-dev
+  blockDeviceMappings:
+    - deviceName: /dev/xvda
+      ebs:
+        volumeType: gp3
+        volumeSize: 50Gi
+        deleteOnTermination: true
+        encrypted: true
   metadataOptions:
     httpEndpoint: enabled
     httpProtocolIPv6: disabled

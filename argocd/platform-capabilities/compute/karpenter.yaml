@@ -28,7 +28,7 @@ spec:
             value: platform
             effect: NoSchedule
         dnsPolicy: Default
-        replicas: 1
+        replicas: 2
         settings:
           clusterName: multi-tenant-eks-dev
           interruptionQueue: Karpenter-multi-tenant-eks-dev

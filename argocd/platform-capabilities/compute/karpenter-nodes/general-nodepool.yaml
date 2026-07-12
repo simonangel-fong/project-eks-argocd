@@ -32,6 +32,9 @@ spec:
           values: ["3"]
   limits:
     cpu: 100
+    memory: 400Gi
   disruption:
     consolidationPolicy: WhenEmptyOrUnderutilized
-    consolidateAfter: 30s
+    consolidateAfter: 90s
+    budgets:
+      - nodes: "20%"
