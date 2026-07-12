@@ -12,7 +12,7 @@ spec:
         repoURL: https://github.com/simonangel-fong/eks-multi-tenant-cluster
         revision: master
         files:
-          - path: tenant/tenants.json
+          - path: tenants/*.json
   template:
     metadata:
       name: "tenant-{{ .name }}"
@@ -33,7 +33,7 @@ spec:
         helm:
           releaseName: "tenant-{{ .name }}"
           valuesObject:
-            name: "tenant-{{ .name }}"
+            name: "{{ .name }}"
             sourceRepo: "{{ .sourceRepo }}"
             manifestPath: "{{ .manifestPath }}"
       destination:
