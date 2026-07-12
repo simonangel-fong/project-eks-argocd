@@ -24,18 +24,30 @@ spec:
         global:
           leaderElection:
             namespace: cert-manager
+        replicaCount: 2
+        podDisruptionBudget:
+          enabled: true
+          minAvailable: 1
         tolerations:
           - key: workload-class
             operator: Equal
             value: platform
             effect: NoSchedule
         webhook:
+          replicaCount: 2
+          podDisruptionBudget:
+            enabled: true
+            minAvailable: 1
           tolerations:
             - key: workload-class
               operator: Equal
               value: platform
               effect: NoSchedule
         cainjector:
+          replicaCount: 2
+          podDisruptionBudget:
+            enabled: true
+            minAvailable: 1
           tolerations:
             - key: workload-class
               operator: Equal

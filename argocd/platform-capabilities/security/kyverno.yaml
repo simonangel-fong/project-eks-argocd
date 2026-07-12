@@ -21,11 +21,15 @@ spec:
       values: |
         admissionController:
           replicas: 2
+          podDisruptionBudget:
+            enabled: true
+            minAvailable: 1
           resources:
             requests:
               cpu: 100m
               memory: 256Mi
             limits:
+              cpu: 1
               memory: 512Mi
           tolerations:
             - key: workload-class

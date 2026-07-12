@@ -26,12 +26,23 @@ spec:
         serviceAccount:
           create: true
           name: aws-load-balancer-controller
-        replicaCount: 1
+        replicaCount: 2
+        podDisruptionBudget:
+          maxUnavailable: 1
         tolerations:
           - key: workload-class
             operator: Equal
             value: platform
             effect: NoSchedule
+        affinity:
+          podAntiAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                podAffinityTerm:
+                  labelSelector:
+                    matchLabels:
+                      app.kubernetes.io/name: aws-load-balancer-controller
+                  topologyKey: kubernetes.io/hostname
   destination:
     server: https://kubernetes.default.svc
     namespace: kube-system

@@ -19,6 +19,9 @@ spec:
     helm:
       releaseName: external-dns
       values: |
+        replicaCount: 2
+        podDisruptionBudget:
+          minAvailable: 1
         provider:
           name: cloudflare
         sources:

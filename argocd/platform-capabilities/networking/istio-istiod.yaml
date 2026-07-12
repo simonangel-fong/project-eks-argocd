@@ -20,11 +20,24 @@ spec:
       values: |
         profile: ambient
         pilot:
+          replicaCount: 2
+          podDisruptionBudget:
+            enabled: true
+            minAvailable: 1
           tolerations:
             - key: workload-class
               operator: Equal
               value: platform
               effect: NoSchedule
+          affinity:
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - weight: 100
+                  podAffinityTerm:
+                    labelSelector:
+                      matchLabels:
+                        app: istiod
+                    topologyKey: kubernetes.io/hostname
   destination:
     server: https://kubernetes.default.svc
     namespace: istio-system
