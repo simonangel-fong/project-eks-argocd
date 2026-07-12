@@ -1,5 +1,0 @@
-{
-  "name": "team-b",
-  "sourceRepo": "https://github.com/simonangel-fong/eks-multi-tenant-cluster",
-  "manifestPath": "demo-app/team-b/chart"
-}
