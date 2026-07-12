@@ -1,5 +1,5 @@
 global:
-  host: todo.arguswatcher.net
+  host: team-b.arguswatcher.net
   team: todo
   image:
     repository: docker.io/simonangelfong/todo-app
