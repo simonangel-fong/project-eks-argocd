@@ -49,41 +49,25 @@ This project answers the challenge with a **multi-tenant cluster on EKS** — a 
 
 ## Architecture
 
-Terraform provisions the AWS foundation (VPC, EKS, IAM, Route53). ArgoCD then bootstraps everything above the API server: platform capabilities first, then per-tenant AppProjects and ApplicationSets that sync each team's own manifest repo.
-
 ![Architecture](docs/img/architecture.png)
 
-```txt
-                Platform owns              │   Tenant owns
-────────────────────────────────────────────┼─────────────────────────────────
-Cluster        EKS control plane           │   —
-               VPC, subnets, IAM           │
-────────────────────────────────────────────┼─────────────────────────────────
-Compute        Karpenter + NodePools       │   nodeSelector on Pods
-               (general/database/gpu)      │
-────────────────────────────────────────────┼─────────────────────────────────
-Storage        StorageClasses              │   PVCs
-               (gp3, gp3-iops)             │
-────────────────────────────────────────────┼─────────────────────────────────
-Network        Gateway, ALB, external-dns  │   HTTPRoute
-               wildcard TLS cert           │   Service
-               Istio ambient mesh          │
-────────────────────────────────────────────┼─────────────────────────────────
-Security       Namespace, AppProject       │   AWS access via PodIdentity
-               NetworkPolicy defaults      │   ExternalSecret references
-               Kyverno policies            │
-               ESO controller              │
-────────────────────────────────────────────┼─────────────────────────────────
-Delivery       ApplicationSet generator    │   Application manifests
-               tenant-chart template       │   (repo + manifestPath)
+- Terraform provisions the AWS foundation (VPC, EKS, IAM, Route53).
+- ArgoCD then bootstraps everything above the API server:
+  - 1. platform capabilities
+  - 2. per-tenant AppProjects and ApplicationSets that sync each team's own manifest repo.
 
-```
+![shared responsibilited model](docs/img/responsibility_model.png)
 
 ---
 
 ## Quick Start
 
-**Prerequisites:** `terraform` ≥ 1.6, `awscli` v2, `kubectl`, AWS credentials with EKS/VPC/IAM permissions, an S3 + DynamoDB backend matching `infra/backend.hcl`, and a Route53 hosted zone for `arguswatcher.net` (or a replacement domain).
+**Prerequisites:**
+
+- `terraform` ≥ 1.6, S3 remote backend
+- `awscli` v2, AWS credentials with EKS/VPC/IAM permissions,
+- `kubectl`,
+- `Cloudflare` token and domain
 
 ```sh
 # 1. Provision AWS
@@ -111,7 +95,7 @@ kubectl -n argocd port-forward svc/argocd-server 8080:443
 Onboarding a new team takes **3 pieces of info and 1 JSON file**.
 
 - **Tenant provides:** `team_name`, `repo_url`, `manifest_path`
-- **Platform engineer commits:** `<team_name>.json` at the repo root — e.g. [team-a.json](team-a.json):
+- **Platform engineer commits:** `<team_name>.json` at the repo root — e.g. [team-a.json](./tenants/team-a.json):
 
 ```json
 {
@@ -123,7 +107,9 @@ Onboarding a new team takes **3 pieces of info and 1 JSON file**.
 
 - **GitOps handles the rest** — namespace, AppProject, ApplicationSet, subdomain, TLS, and policy.
 - **Public URL:** `https://<team_name>.arguswatcher.net`
-- **Time to live URL:** ~3 minutes for a stateless app, ~2 additional minutes for a stateful app (PVC + database class node).
+- **Time to live URL:**
+  - ~3 minutes for a stateless app,
+  - ~2 additional minutes for a stateful app (PVC + database class node).
 
 ---
 
