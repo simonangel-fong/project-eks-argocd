@@ -1,6 +1,8 @@
 # Multi-tenant Cluster with EKS
 
-> A multi-tenant EKS cluster that runs many teams on shared infrastructure. Terraform provisions AWS; ArgoCD runs everything above the API server via GitOps.
+> One Cluster; Multi-tanent; GitOps practices
+
+A multi-tenant EKS cluster that runs many teams on shared infrastructure. Terraform provisions AWS; ArgoCD runs everything above the API server via GitOps.
 
 **AWS EKS · Terraform · ArgoCD · Karpenter · Istio (ambient) · AWS Load Balancer Controller · cert-manager · External Secrets · Kyverno**
 
@@ -10,8 +12,8 @@
   - [Architecture](#architecture)
   - [Quick Start](#quick-start)
   - [Onboarding Demo](#onboarding-demo)
-    - [Stateless: Team A](#stateless-team-a)
-    - [Stateful: Team B](#stateful-team-b)
+    - [Stateless App Example: Team A](#stateless-app-example-team-a)
+    - [Stateful App Example: Team B](#stateful-app-example-team-b)
   - [Limitations \& Roadmap](#limitations--roadmap)
   - [Documentation](#documentation)
 
@@ -27,16 +29,24 @@ In a small or mid-size enterprise, giving every product team its own Kubernetes 
 
 ## The Multi-tenant Cluster
 
-This project answers the challenge with a **multi-tenant cluster on EKS** — a single Kubernetes cluster shared by multiple teams, with platform-owned guardrails and tenant-owned workloads.
+This project answers the challenge with a `multi-tenant cluster` with `AWS EKS`
 
-**Why multi-tenant:**
+- a single Kubernetes cluster shared by multiple teams, with platform-owned guardrails and tenant-owned workloads.
 
-- **Lower cost** — pooled capacity replaces per-team over-provisioning.
-- **One platform to run** — one control plane, one upgrade path, one security baseline.
-- **Consistent governance** — the same guardrails apply to every tenant.
-- **Fast onboarding** — a new team goes live with one platform PR and one tenant PR.
+**Why `multi-tenant`:**
 
-**How the project delivers it** — four out-of-the-box capabilities:
+- **Lower cost**
+  - pooled capacity replaces per-team over-provisioning.
+- **One platform to run**
+  - one control plane, one upgrade path, one security baseline.
+- **Consistent governance**
+  - the same guardrails apply to every tenant.
+- **Fast onboarding**
+  - a new team goes live with one platform PR and one tenant PR.
+
+---
+
+**What the platform delivers**: four out-of-the-box capabilities
 
 | Capability | Tooling                                           | What tenants get                                            |
 | ---------- | ------------------------------------------------- | ----------------------------------------------------------- |
@@ -57,6 +67,8 @@ This project answers the challenge with a **multi-tenant cluster on EKS** — a 
   - 2. per-tenant AppProjects and ApplicationSets that sync each team's own manifest repo.
 
 ![shared responsibilited model](docs/img/responsibility_model.png)
+
+- Clear boundary between platform and tenats.
 
 ---
 
@@ -113,7 +125,7 @@ Onboarding a new team takes **3 pieces of info and 1 JSON file**.
 
 ---
 
-### Stateless: Team A
+### Stateless App Example: Team A
 
 - **Application:** simple nginx web app, plain Kubernetes manifests ([demo-app/team-a/](demo-app/team-a/))
 - **Node class:** `general` — see [docs/tenant/compute.md](docs/tenant/compute.md) for the nodeSelector pattern.
@@ -123,7 +135,7 @@ Onboarding a new team takes **3 pieces of info and 1 JSON file**.
 
 ---
 
-### Stateful: Team B
+### Stateful App Example: Team B
 
 - **Application:** full-stack to-do app, Helm chart ([demo-app/team-b/](demo-app/team-b/))
 - **Node classes:** `general` (frontend, backend) · `database` (database) — see [docs/tenant/compute.md](docs/tenant/compute.md) for the nodeSelector pattern.
@@ -139,10 +151,10 @@ Onboarding a new team takes **3 pieces of info and 1 JSON file**.
 
 **Known limitations:**
 
-- **Self-service UI** — out of scope; onboarding is GitOps-driven via a JSON file.
-- **Observability** — multi-tenant monitoring, logging, and tracing are still in progress.
-- **Single region, single cluster** — no multi-region failover or cross-region DR.
-- **Cost showback** — the _lower cost_ benefit is architectural, not measured; per-tenant chargeback dashboards are not shipped.
+- **Self-service UI**: out of scope; onboarding is GitOps-driven via a JSON file.
+- **Observability**: multi-tenant monitoring, logging, and tracing are still in progress.
+- **Single region, single cluster**: no multi-region failover or cross-region DR.
+- **Cost showback**: the _lower cost_ benefit is architectural, not measured; per-tenant chargeback dashboards are not shipped.
 
 **Roadmap:**
 
@@ -156,13 +168,13 @@ Onboarding a new team takes **3 pieces of info and 1 JSON file**.
 
 ## Documentation
 
-**Tenant guides** — read to onboard an app.
+**Tenant guides**: read to onboard an app.
 
 - [Onboarding](docs/tenant/onboarding.md)
 - [Compute](docs/tenant/compute.md)
 - [Network](docs/tenant/network.md)
 
-**Platform runbooks** — read to operate a live cluster.
+**Platform runbooks**: read to operate a live cluster.
 
 - [Compute](docs/platform/compute.md)
 - [Storage](docs/platform/storage.md)
@@ -170,7 +182,7 @@ Onboarding a new team takes **3 pieces of info and 1 JSON file**.
 - [Security](docs/platform/security.md)
 - [Onboarding a tenant](docs/platform/onboarding.md)
 
-**Design & implementation** — read to understand how the project is built.
+**Design & implementation**: read to understand how the project is built.
 
 - [IaC with Terraform](docs/dev/01-infra.md)
 - [GitOps with ArgoCD](docs/dev/02-argocd.md)
